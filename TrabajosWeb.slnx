@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="TrabajosWeb.Api/TrabajosWeb.Api.csproj" />
+  <Project Path="TrabajosWeb.Shared/TrabajosWeb.Shared.csproj" />
+  <Project Path="TrabajosWeb.Web/TrabajosWeb.Web.csproj" />
+</Solution>

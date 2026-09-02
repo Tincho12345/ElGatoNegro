@@ -1,0 +1,133 @@
+﻿@using Microsoft.Extensions.Options
+@using TrabajosWeb.Web.Configuration
+@inject IOptions<ContactoSettings> ContactoOpt
+@{
+    var contacto = ContactoOpt.Value;
+    var accion = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · Gato Negro</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <script>
+            // Se aplica antes de pintar, para que no haya destello del tema anterior
+            (function () {
+                try {
+                    var guardado = localStorage.getItem('tema');
+                    if (guardado) document.documentElement.setAttribute('data-tema', guardado);
+                } catch (e) { }
+            })();
+    </script>
+</head>
+<body>
+    <header class="barra">
+        <div class="contenedor barra-interior">
+            <a class="marca" asp-controller="Home" asp-action="Index">Gato Negro</a>
+
+            <button class="menu-boton" type="button" aria-label="Abrir menú"
+                    aria-expanded="false" aria-controls="menuPrincipal" data-menu="true">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <ul class="menu" id="menuPrincipal">
+                <li>
+                    <a asp-controller="Home" asp-action="Index"
+                       class="@(accion == "Home" ? "activo" : null)">Trabajos</a>
+                </li>
+                <li>
+                    <a asp-controller="Home" asp-action="Contacto">Contacto</a>
+                </li>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <li>
+                        <a asp-controller="Admin" asp-action="Index"
+                           class="@(accion == "Admin" ? "activo" : null)">Panel</a>
+                    </li>
+                    <li>
+                        <form asp-controller="Cuenta" asp-action="Logout" method="post" class="sin-margen">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="boton boton-claro boton-chico">Cerrar sesión</button>
+                        </form>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <a asp-controller="Cuenta" asp-action="Login"
+                           class="@(accion == "Cuenta" ? "activo" : null)">Acceso</a>
+                    </li>
+                }
+                <li>
+                    <div class="temas" role="group" aria-label="Elegir estilo visual">
+                        <button type="button" class="tema-opcion tema-claro" data-tema-valor="claro"
+                                aria-pressed="true" title="Claro"></button>
+                        <button type="button" class="tema-opcion tema-oscuro" data-tema-valor="oscuro"
+                                aria-pressed="false" title="Oscuro"></button>
+                        <button type="button" class="tema-opcion tema-bloques" data-tema-valor="bloques"
+                                aria-pressed="false" title="Bloques de color"></button>
+                    </div>
+                </li>
+            </ul>
+
+        </div>
+    </header>
+
+    <main>
+        <div class="contenedor">
+            @if (TempData["Exito"] is string exito)
+            {
+                <div class="aviso aviso-ok" style="margin-top: 24px;">
+                    <i class="fa-solid fa-circle-check"></i><span>@exito</span>
+                </div>
+            }
+            @if (TempData["Error"] is string errorMsg)
+            {
+                <div class="aviso aviso-error" style="margin-top: 24px;">
+                    <i class="fa-solid fa-circle-exclamation"></i><span>@errorMsg</span>
+                </div>
+            }
+        </div>
+
+        @RenderBody()
+    </main>
+
+    <footer class="pie">
+        <div class="contenedor entre">
+            <span>© @DateTime.Now.Year Gato Negro</span>
+            <div class="fila">
+                <a href="@contacto.LinkWhatsApp" target="_blank" rel="noopener">Escribinos por WhatsApp</a>
+            </div>
+        </div>
+    </footer>
+
+    <a href="@contacto.LinkWhatsApp" target="_blank" rel="noopener"
+       class="wa-flotante" aria-label="Escribinos por WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/temas.js" asp-append-version="true"></script>
+    <script>
+            (function () {
+                var boton = document.querySelector('[data-menu]');
+                var menu = document.getElementById('menuPrincipal');
+                if (!boton || !menu) return;
+
+                boton.addEventListener('click', function () {
+                    var abierto = menu.classList.toggle('abierto');
+                    boton.setAttribute('aria-expanded', abierto);
+                });
+            })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

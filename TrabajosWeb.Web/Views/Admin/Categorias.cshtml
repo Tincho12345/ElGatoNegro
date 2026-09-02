@@ -1,0 +1,94 @@
+﻿@model List<TrabajosWeb.Shared.DTOs.CategoriaDto>
+@{
+    ViewData["Title"] = "Categorías";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>Categorías</h1>
+        <div class="fila">
+            <a asp-action="Index" class="boton boton-claro">
+                <i class="fa-solid fa-arrow-left"></i>Volver al panel
+            </a>
+            <a asp-action="NuevaCategoria" class="boton boton-primario">
+                <i class="fa-solid fa-plus"></i>Nueva categoría
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="vidrio vacio">
+            <i class="fa-solid fa-tags"></i>
+            <p>No hay categorías cargadas.</p>
+            <a asp-action="NuevaCategoria" class="boton boton-primario">Crear la primera</a>
+        </div>
+    }
+    else
+    {
+        <div class="vidrio tabla-envoltorio">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Orden</th>
+                        <th>Nombre</th>
+                        <th>Trabajos</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var categoria in Model)
+                    {
+                        <tr>
+                            <td class="tenue">@categoria.Orden</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(categoria.Icono))
+                                {
+                                    <i class="@categoria.Icono" style="color:var(--rosa-fuerte);margin-right:10px;"></i>
+                                }
+                                <strong>@categoria.Nombre</strong>
+                                @if (!string.IsNullOrWhiteSpace(categoria.Descripcion))
+                                {
+                                    <span class="tenue chico" style="display:block;">@categoria.Descripcion</span>
+                                }
+                            </td>
+                            <td class="tenue">@categoria.CantidadTrabajos</td>
+                            <td>
+                                @if (categoria.Activa)
+                                {
+                                    <span class="etiqueta etiqueta-si">Activa</span>
+                                }
+                                else
+                                {
+                                    <span class="etiqueta etiqueta-neutra">Oculta</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="acciones">
+                                    <a asp-action="EditarCategoria" asp-route-id="@categoria.Id"
+                                       class="boton-icono" title="Editar">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <form asp-action="EliminarCategoria" method="post" class="en-linea"
+                                          onsubmit="return confirm('¿Eliminar esta categoría?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@categoria.Id" />
+                                        <button type="submit" class="boton-icono" title="Eliminar">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="tenue chico" style="margin-top:16px;">
+            Una categoría con trabajos no se puede eliminar. Si querés sacarla de la web sin perder el
+            contenido, editala y desmarcá «Activa».
+        </p>
+    }
+</section>

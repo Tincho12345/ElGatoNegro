@@ -1,0 +1,134 @@
+﻿@using TrabajosWeb.Shared.DTOs
+@model TrabajosWeb.Web.Models.TrabajoFormViewModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nuevo trabajo" : "Editar trabajo";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>@(Model.EsNuevo ? "Nuevo trabajo" : "Editar trabajo")</h1>
+        <a asp-action="Index" class="boton boton-claro">
+            <i class="fa-solid fa-arrow-left"></i>Volver al panel
+        </a>
+    </div>
+
+    <form asp-action="GuardarTrabajo" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <div class="columnas-form">
+            <div class="vidrio" style="padding: 32px;">
+                <div class="campo">
+                    <label asp-for="Trabajo.Titulo">Título</label>
+                    <input asp-for="Trabajo.Titulo" class="entrada"
+                           placeholder="Balayage en tonos miel" autofocus />
+                    <span asp-validation-for="Trabajo.Titulo"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Trabajo.Descripcion">
+                        Descripción <span class="ayuda">(opcional)</span>
+                    </label>
+                    <textarea asp-for="Trabajo.Descripcion" class="entrada" rows="5"
+                              placeholder="Contá qué se hizo, qué productos se usaron, cuánto llevó."></textarea>
+                    <span asp-validation-for="Trabajo.Descripcion"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Trabajo.CategoriaId">Categoría</label>
+                    <select asp-for="Trabajo.CategoriaId" asp-items="Model.Categorias" class="entrada">
+                        <option value="">Elegí una categoría</option>
+                    </select>
+                    <span asp-validation-for="Trabajo.CategoriaId"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="archivos">Fotos y videos</label>
+                    <input type="file" name="archivos" id="archivos" class="entrada"
+                           multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" />
+                    <span class="ayuda chico">
+                        JPG, PNG, WEBP, MP4, WEBM o MOV. Hasta 200 MB por archivo.
+                    </span>
+                </div>
+            </div>
+
+            <div class="vidrio" style="padding: 32px;">
+                <h3 style="font-size:1.05rem;">Visibilidad</h3>
+
+                <div class="opcion">
+                    <input asp-for="Trabajo.Publicado" type="checkbox" />
+                    <label asp-for="Trabajo.Publicado">
+                        Publicado
+                        <span class="ayuda chico" style="display:block;font-weight:400;">
+                            Si lo desmarcás, queda guardado pero no se ve en la web.
+                        </span>
+                    </label>
+                </div>
+
+                <div class="opcion">
+                    <input asp-for="Trabajo.Destacado" type="checkbox" />
+                    <label asp-for="Trabajo.Destacado">
+                        Destacado
+                        <span class="ayuda chico" style="display:block;font-weight:400;">
+                            Aparece primero en la galería.
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" class="boton boton-primario boton-ancho" style="margin-top:16px;">
+                    <i class="fa-solid fa-check"></i>Guardar trabajo
+                </button>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.EsNuevo)
+    {
+        <div class="vidrio" style="padding: 32px; margin-top: 24px;">
+            <h3 style="font-size:1.05rem;">Archivos cargados</h3>
+
+            @if (!Model.MediosActuales.Any())
+            {
+                <p class="tenue chico sin-margen">
+                    Todavía no hay fotos ni videos. Subilos con el campo de arriba.
+                </p>
+            }
+            else
+            {
+                <div class="medios">
+                    @foreach (var media in Model.MediosActuales)
+                    {
+                        var url = Model.ApiBaseUrl + media.Url;
+
+                        <div class="medio">
+                            @if (media.Tipo == TipoMedia.Imagen)
+                            {
+                                <img src="@url" alt="@media.TextoAlternativo" loading="lazy" />
+                            }
+                            else
+                            {
+                                <video src="@url" preload="metadata" muted></video>
+                            }
+
+                            <form asp-action="EliminarMedia" method="post"
+                                  onsubmit="return confirm('¿Eliminar este archivo?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="trabajoId" value="@Model.Id" />
+                                <input type="hidden" name="mediaId" value="@media.Id" />
+                                <button type="submit" class="quitar" title="Eliminar">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

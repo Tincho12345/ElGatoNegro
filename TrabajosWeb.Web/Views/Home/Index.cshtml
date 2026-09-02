@@ -1,0 +1,93 @@
+﻿@using TrabajosWeb.Shared.DTOs
+@model TrabajosWeb.Web.Models.GaleriaViewModel
+@{
+    ViewData["Title"] = "Trabajos";
+}
+
+<section class="contenedor portada">
+    <h1>Gato Negro</h1>
+    <p class="bajada">
+        Cortes, color, brushing y tratamientos. Mirá lo que hicimos y contanos qué tenés en mente.
+    </p>
+</section>
+
+<section class="contenedor seccion-corta">
+    @if (Model.Categorias.Any())
+    {
+        <nav class="filtros" aria-label="Filtrar por tipo de trabajo">
+            <a asp-action="Index"
+               class="filtro @(string.IsNullOrEmpty(Model.CategoriaActual) ? "activo" : null)">
+                Todo
+            </a>
+            @foreach (var categoria in Model.Categorias)
+            {
+                <a asp-action="Index" asp-route-categoria="@categoria.Slug"
+                   class="filtro @(Model.CategoriaActual == categoria.Slug ? "activo" : null)">
+                    @if (!string.IsNullOrWhiteSpace(categoria.Icono))
+                    {
+                        <i class="@categoria.Icono"></i>
+                    }
+                    @categoria.Nombre
+                </a>
+            }
+        </nav>
+    }
+
+    @if (!Model.Trabajos.Any())
+    {
+        <div class="vidrio vacio">
+            <i class="fa-regular fa-images"></i>
+            <p>
+                @(string.IsNullOrEmpty(Model.CategoriaActual)
+                    ? "Todavía no hay trabajos publicados."
+                    : "No hay trabajos en esta categoría por ahora.")
+            </p>
+            <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
+               class="boton boton-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>Consultanos
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="masonry">
+            @foreach (var trabajo in Model.Trabajos)
+            {
+                var portada = trabajo.Medios
+                    .OrderBy(m => m.Orden)
+                    .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+
+                var videos = trabajo.Medios.Count(m => m.Tipo == TipoMedia.Video);
+
+                <a asp-action="Detalle" asp-route-id="@trabajo.Id" class="pieza">
+                    @if (portada is not null)
+                    {
+                        <img src="@(Model.ApiBaseUrl + portada.Url)"
+                             alt="@(portada.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="pieza-vacia"><i class="fa-solid fa-scissors"></i></div>
+                    }
+
+                    @if (trabajo.Destacado)
+                    {
+                        <span class="marca-destacado">Destacado</span>
+                    }
+
+                    @if (videos > 0)
+                    {
+                        <span class="marca-video">
+                            <i class="fa-solid fa-play"></i>@videos
+                        </span>
+                    }
+
+                    <div class="pieza-pie">
+                        <h3 class="pieza-titulo">@trabajo.Titulo</h3>
+                        <span class="pieza-categoria">@trabajo.CategoriaNombre</span>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>

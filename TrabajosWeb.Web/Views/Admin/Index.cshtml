@@ -1,0 +1,131 @@
+﻿@using TrabajosWeb.Shared.DTOs
+@model TrabajosWeb.Web.Models.PanelViewModel
+@{
+    ViewData["Title"] = "Panel";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>Panel</h1>
+        <div class="fila">
+            <a asp-action="Categorias" class="boton boton-claro">
+                <i class="fa-solid fa-tags"></i>Categorías
+            </a>
+            <a asp-action="Consultas" class="boton boton-claro">
+                <i class="fa-regular fa-envelope"></i>Consultas
+            </a>
+            <a asp-action="NuevoTrabajo" class="boton boton-primario">
+                <i class="fa-solid fa-plus"></i>Nuevo trabajo
+            </a>
+        </div>
+    </div>
+
+    <div class="resumen">
+        <div class="vidrio dato">
+            <span class="cifra">@Model.Trabajos.Count</span>
+            <span class="rotulo">Trabajos cargados</span>
+        </div>
+        <div class="vidrio dato">
+            <span class="cifra">@Model.Trabajos.Count(t => t.Publicado)</span>
+            <span class="rotulo">Visibles en la web</span>
+        </div>
+        <div class="vidrio dato">
+            <span class="cifra">@Model.Categorias.Count(c => c.Activa)</span>
+            <span class="rotulo">Categorías activas</span>
+        </div>
+        <div class="vidrio dato @(Model.ConsultasSinLeer > 0 ? "dato-alerta" : null)">
+            <span class="cifra">@Model.ConsultasSinLeer</span>
+            <span class="rotulo">Consultas sin leer</span>
+        </div>
+    </div>
+
+    @if (!Model.Trabajos.Any())
+    {
+        <div class="vidrio vacio">
+            <i class="fa-regular fa-images"></i>
+            <p>Todavía no cargaste ningún trabajo.</p>
+            <a asp-action="NuevoTrabajo" class="boton boton-primario">Cargar el primero</a>
+        </div>
+    }
+    else
+    {
+        <div class="vidrio tabla-envoltorio">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Título</th>
+                        <th>Categoría</th>
+                        <th>Archivos</th>
+                        <th>Estado</th>
+                        <th>Actualizado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var trabajo in Model.Trabajos)
+                    {
+                        var portada = trabajo.Medios
+                            .OrderBy(m => m.Orden)
+                            .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+
+                        <tr>
+                            <td>
+                                @if (portada is not null)
+                                {
+                                    <img src="@(Model.ApiBaseUrl + portada.Url)" alt=""
+                                         class="miniatura-fila" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <div class="miniatura-fila"></div>
+                                }
+                            </td>
+                            <td>
+                                <strong>@trabajo.Titulo</strong>
+                                @if (trabajo.Destacado)
+                                {
+                                    <span class="etiqueta etiqueta-no" style="margin-left:8px;">Destacado</span>
+                                }
+                            </td>
+                            <td class="tenue">@trabajo.CategoriaNombre</td>
+                            <td class="tenue chico">
+                                @trabajo.Medios.Count(m => m.Tipo == TipoMedia.Imagen) fotos ·
+                                @trabajo.Medios.Count(m => m.Tipo == TipoMedia.Video) videos
+                            </td>
+                            <td>
+                                @if (trabajo.Publicado)
+                                {
+                                    <span class="etiqueta etiqueta-si">Publicado</span>
+                                }
+                                else
+                                {
+                                    <span class="etiqueta etiqueta-neutra">Borrador</span>
+                                }
+                            </td>
+                            <td class="tenue chico">
+                                @((trabajo.ModifiedDate ?? trabajo.CreatedDate).ToLocalTime().ToString("dd/MM/yyyy HH:mm"))
+                            </td>
+                            <td>
+                                <div class="acciones">
+                                    <a asp-action="EditarTrabajo" asp-route-id="@trabajo.Id"
+                                       class="boton-icono" title="Editar">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <form asp-action="EliminarTrabajo" method="post" class="en-linea"
+                                          onsubmit="return confirm('Se elimina el trabajo y todas sus fotos y videos. ¿Continuar?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@trabajo.Id" />
+                                        <button type="submit" class="boton-icono" title="Eliminar">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

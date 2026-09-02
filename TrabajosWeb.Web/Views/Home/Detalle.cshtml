@@ -1,0 +1,72 @@
+﻿@using TrabajosWeb.Shared.DTOs
+@model TrabajosWeb.Web.Models.GaleriaViewModel
+@{
+    var trabajo = Model.Trabajos.First();
+    ViewData["Title"] = trabajo.Titulo;
+
+    var mensaje = $"{Model.Contacto.MensajePredeterminado} Vi este trabajo: {trabajo.Titulo}";
+    var linkConsulta = $"https://wa.me/{Model.Contacto.WhatsAppNumero}?text={Uri.EscapeDataString(mensaje)}";
+}
+
+<section class="contenedor seccion">
+    <a asp-action="Index" class="chico" style="display:inline-block;margin-bottom:24px;">
+        <i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Volver a los trabajos
+    </a>
+
+    <div class="columnas-form">
+        <div>
+            <h1 style="margin-bottom:8px;">@trabajo.Titulo</h1>
+            <p class="tenue" style="margin-bottom:32px;">@trabajo.CategoriaNombre</p>
+
+            @if (!string.IsNullOrWhiteSpace(trabajo.Descripcion))
+            {
+                <p style="font-size:1.05rem;">@trabajo.Descripcion</p>
+            }
+
+            <div class="media-detalle" style="margin-top:32px;">
+                @if (!trabajo.Medios.Any())
+                {
+                    <div class="vidrio vacio">
+                        <i class="fa-regular fa-images"></i>
+                        <p>Este trabajo todavía no tiene fotos ni videos.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var media in trabajo.Medios.OrderBy(m => m.Orden))
+                    {
+                        var url = Model.ApiBaseUrl + media.Url;
+
+                        if (media.Tipo == TipoMedia.Imagen)
+                        {
+                            <img src="@url" alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
+                        }
+                        else
+                        {
+                            <video controls preload="metadata" playsinline>
+                                <source src="@url" />
+                                Tu navegador no puede reproducir este video.
+                            </video>
+                        }
+                    }
+                }
+            </div>
+        </div>
+
+        <aside class="vidrio" style="padding:32px;position:sticky;top:96px;">
+            <h3 style="font-size:1.15rem;">¿Querés algo así?</h3>
+            <p class="tenue chico">
+                Contanos qué tenés en mente y te pasamos precio y disponibilidad.
+            </p>
+
+            <a href="@linkConsulta" target="_blank" rel="noopener"
+               class="boton boton-whatsapp boton-ancho" style="margin-bottom:10px;">
+                <i class="fa-brands fa-whatsapp"></i>Consultar por WhatsApp
+            </a>
+
+            <a asp-action="Contacto" class="boton boton-borde boton-ancho">
+                <i class="fa-regular fa-envelope"></i>Enviar un mensaje
+            </a>
+        </aside>
+    </div>
+</section>

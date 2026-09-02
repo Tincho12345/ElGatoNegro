@@ -1,0 +1,102 @@
+﻿@model TrabajosWeb.Web.Models.ConsultasViewModel
+@{
+    ViewData["Title"] = "Consultas";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>Consultas</h1>
+        <div class="fila">
+            <a asp-action="Index" class="boton boton-claro">
+                <i class="fa-solid fa-arrow-left"></i>Volver al panel
+            </a>
+            @if (Model.SoloNoLeidas)
+            {
+                <a asp-action="Consultas" class="boton boton-borde">Ver todas</a>
+            }
+            else
+            {
+                <a asp-action="Consultas" asp-route-soloNoLeidas="true" class="boton boton-borde">
+                    Solo sin leer
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (!Model.Consultas.Any())
+    {
+        <div class="vidrio vacio">
+            <i class="fa-regular fa-envelope-open"></i>
+            <p>
+                @(Model.SoloNoLeidas
+                    ? "No quedan consultas sin leer."
+                    : "Todavía no llegaron consultas desde el formulario.")
+            </p>
+        </div>
+    }
+    else
+    {
+        @foreach (var consulta in Model.Consultas)
+        {
+            var telefono = new string((consulta.Telefono ?? "").Where(char.IsDigit).ToArray());
+
+            <article class="vidrio consulta @(consulta.Leida ? null : "sin-leer")">
+                <div class="consulta-cabecera">
+                    <span class="consulta-nombre">@consulta.Nombre</span>
+                    <span class="consulta-fecha">
+                        @consulta.CreatedDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        @if (!consulta.Leida)
+                        {
+                            <span class="etiqueta etiqueta-no" style="margin-left:8px;">Sin leer</span>
+                        }
+                    </span>
+                </div>
+
+                <div class="consulta-datos">
+                    <a href="mailto:@consulta.Email">@consulta.Email</a>
+                    @if (!string.IsNullOrWhiteSpace(consulta.Telefono))
+                    {
+                        <span> · @consulta.Telefono</span>
+                    }
+                </div>
+
+                <div class="consulta-mensaje">@consulta.Mensaje</div>
+
+                <div class="consulta-acciones">
+                    @if (telefono.Length >= 8)
+                    {
+                        <a href="https://wa.me/@telefono" target="_blank" rel="noopener"
+                           class="boton boton-whatsapp boton-chico">
+                            <i class="fa-brands fa-whatsapp"></i>Responder por WhatsApp
+                        </a>
+                    }
+
+                    <a href="mailto:@consulta.Email?subject=Tu consulta"
+                       class="boton boton-claro boton-chico">
+                        <i class="fa-regular fa-envelope"></i>Responder por mail
+                    </a>
+
+                    @if (!consulta.Leida)
+                    {
+                        <form asp-action="MarcarLeida" method="post" class="en-linea">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@consulta.Id" />
+                            <button type="submit" class="boton boton-borde boton-chico">
+                                <i class="fa-solid fa-check"></i>Marcar leída
+                            </button>
+                        </form>
+                    }
+
+                    <form asp-action="EliminarConsulta" method="post" class="en-linea"
+                          onsubmit="return confirm('¿Eliminar esta consulta?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@consulta.Id" />
+                        <button type="submit" class="boton boton-peligro boton-chico">
+                            <i class="fa-regular fa-trash-can"></i>Eliminar
+                        </button>
+                    </form>
+                </div>
+            </article>
+        }
+    }
+</section>

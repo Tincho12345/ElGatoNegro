@@ -1,0 +1,64 @@
+﻿@model TrabajosWeb.Shared.DTOs.LoginDto
+@{
+    ViewData["Title"] = "Ingresar";
+}
+
+<section class="contenedor seccion">
+    <div class="vidrio" style="max-width:420px;margin-inline:auto;padding:40px;">
+        <h1 class="centro" style="font-size:1.8rem;margin-bottom:32px;">Ingresar</h1>
+
+        <form asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div class="campo">
+                <label asp-for="NombreUsuario">Usuario</label>
+                <input asp-for="NombreUsuario" class="entrada" autocomplete="username" autofocus />
+                <span asp-validation-for="NombreUsuario"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Password">Contraseña</label>
+                <div class="con-ojo">
+                    <input asp-for="Password" class="entrada" type="password"
+                           autocomplete="current-password" id="campoPassword" />
+                    <button type="button" class="ojo" data-ojo="campoPassword"
+                            aria-label="Mostrar contraseña" aria-pressed="false">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Password"></span>
+            </div>
+
+            <button type="submit" class="boton boton-primario boton-ancho">
+                <i class="fa-solid fa-right-to-bracket"></i>Ingresar
+            </button>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            document.querySelectorAll('[data-ojo]').forEach(function (boton) {
+                var campo = document.getElementById(boton.dataset.ojo);
+                if (!campo) return;
+
+                boton.addEventListener('click', function () {
+                    var visible = campo.type === 'text';
+
+                    campo.type = visible ? 'password' : 'text';
+                    boton.setAttribute('aria-pressed', !visible);
+                    boton.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+                    boton.querySelector('i').className = visible
+                        ? 'fa-regular fa-eye'
+                        : 'fa-regular fa-eye-slash';
+
+                    campo.focus();
+                });
+            });
+        })();
+    </script>
+}

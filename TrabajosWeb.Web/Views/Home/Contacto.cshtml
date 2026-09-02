@@ -1,0 +1,68 @@
+﻿@model TrabajosWeb.Web.Models.ContactoViewModel
+@{
+    ViewData["Title"] = "Contacto";
+}
+
+<section class="contenedor seccion">
+    <div style="max-width:620px;margin-inline:auto;">
+        <h1 class="centro">Escribinos</h1>
+        <p class="tenue centro" style="margin-inline:auto;margin-bottom:40px;">
+            Contanos qué buscás y te respondemos con precio y horarios disponibles.
+        </p>
+
+        <div class="vidrio" style="padding:36px;">
+            <form asp-action="Contacto" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"></div>
+
+                <div class="campo">
+                    <label asp-for="Consulta.Nombre">Nombre</label>
+                    <input asp-for="Consulta.Nombre" class="entrada" autocomplete="name" />
+                    <span asp-validation-for="Consulta.Nombre"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Consulta.Email">Email</label>
+                    <input asp-for="Consulta.Email" class="entrada" type="email" autocomplete="email" />
+                    <span asp-validation-for="Consulta.Email"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Consulta.Telefono">
+                        Teléfono <span class="ayuda">(opcional)</span>
+                    </label>
+                    <input asp-for="Consulta.Telefono" class="entrada" autocomplete="tel"
+                           placeholder="3751 123456" />
+                    <span class="ayuda chico">Si lo dejás, te podemos contestar por WhatsApp.</span>
+                    <span asp-validation-for="Consulta.Telefono"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Consulta.Mensaje">Mensaje</label>
+                    <textarea asp-for="Consulta.Mensaje" class="entrada" rows="5"
+                              placeholder="Quiero un balayage, tengo el pelo hasta los hombros y color castaño."></textarea>
+                    <span asp-validation-for="Consulta.Mensaje"></span>
+                </div>
+
+                <button type="submit" class="boton boton-primario boton-ancho">
+                    <i class="fa-regular fa-paper-plane"></i>Enviar consulta
+                </button>
+            </form>
+        </div>
+
+        <div class="vidrio-suave centro" style="padding:28px;margin-top:20px;">
+            <p class="chico sin-margen" style="margin-inline:auto;margin-bottom:16px;">
+                ¿Preferís una respuesta más rápida?
+            </p>
+            <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
+               class="boton boton-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>Escribinos por WhatsApp
+            </a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

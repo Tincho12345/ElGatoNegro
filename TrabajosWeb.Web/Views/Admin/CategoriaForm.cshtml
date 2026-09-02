@@ -1,0 +1,73 @@
+﻿@model TrabajosWeb.Web.Models.CategoriaFormViewModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nueva categoría" : "Editar categoría";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>@(Model.EsNuevo ? "Nueva categoría" : "Editar categoría")</h1>
+        <a asp-action="Categorias" class="boton boton-claro">
+            <i class="fa-solid fa-arrow-left"></i>Volver
+        </a>
+    </div>
+
+    <div class="vidrio" style="padding:32px;max-width:640px;">
+        <form asp-action="GuardarCategoria" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div class="campo">
+                <label asp-for="Categoria.Nombre">Nombre</label>
+                <input asp-for="Categoria.Nombre" class="entrada" placeholder="Color y tintura" autofocus />
+                <span asp-validation-for="Categoria.Nombre"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Categoria.Descripcion">
+                    Descripción <span class="ayuda">(opcional)</span>
+                </label>
+                <textarea asp-for="Categoria.Descripcion" class="entrada" rows="3"
+                          placeholder="Qué incluye este tipo de trabajo."></textarea>
+                <span asp-validation-for="Categoria.Descripcion"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Categoria.Icono">
+                    Ícono <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Categoria.Icono" class="entrada" placeholder="fa-solid fa-palette" />
+                <span class="ayuda chico">
+                    Clase de Font Awesome. Buscá el nombre en fontawesome.com y copiá la clase completa.
+                </span>
+                <span asp-validation-for="Categoria.Icono"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Categoria.Orden">Orden</label>
+                <input asp-for="Categoria.Orden" class="entrada" type="number" min="0" style="max-width:140px;" />
+                <span class="ayuda chico">Número más bajo, aparece antes en el filtro.</span>
+                <span asp-validation-for="Categoria.Orden"></span>
+            </div>
+
+            <div class="opcion">
+                <input asp-for="Categoria.Activa" type="checkbox" />
+                <label asp-for="Categoria.Activa">
+                    Activa
+                    <span class="ayuda chico" style="display:block;font-weight:400;">
+                        Si la desmarcás, deja de aparecer en el filtro de la web.
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="boton boton-primario" style="margin-top:8px;">
+                <i class="fa-solid fa-check"></i>Guardar categoría
+            </button>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
