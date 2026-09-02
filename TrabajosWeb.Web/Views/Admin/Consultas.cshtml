@@ -88,7 +88,7 @@
                     }
 
                     <form asp-action="EliminarConsulta" method="post" class="en-linea"
-                          onsubmit="return confirm('¿Eliminar esta consulta?');">
+                          data-confirmar="¿Eliminar esta consulta?">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@consulta.Id" />
                         <button type="submit" class="boton boton-peligro boton-chico">

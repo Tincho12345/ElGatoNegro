@@ -3,70 +3,104 @@
 @{
     var trabajo = Model.Trabajos.First();
     ViewData["Title"] = trabajo.Titulo;
+    Layout = "_LayoutSalone";
 
     var mensaje = $"{Model.Contacto.MensajePredeterminado} Vi este trabajo: {trabajo.Titulo}";
     var linkConsulta = $"https://wa.me/{Model.Contacto.WhatsAppNumero}?text={Uri.EscapeDataString(mensaje)}";
+
+    var medios = trabajo.Medios.OrderBy(m => m.Orden).ToList();
+    var grupo = $"trabajo-{trabajo.Id}";
 }
 
-<section class="contenedor seccion">
-    <a asp-action="Index" class="chico" style="display:inline-block;margin-bottom:24px;">
-        <i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Volver a los trabajos
-    </a>
+<div class="container-fluid bg-light page-header py-5 mb-5">
+    <div class="container text-center py-5">
+        <h1 class="font-dancing-script text-primary animated slideInLeft">@trabajo.CategoriaNombre</h1>
+        <h1 class="display-2 animated slideInLeft">@trabajo.Titulo</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb justify-content-center animated slideInLeft mb-0">
+                <li class="breadcrumb-item">
+                    <a class="text-primary" asp-action="Index">Trabajos</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a class="text-primary" asp-action="Index" asp-route-categoria="@trabajo.CategoriaSlug">@trabajo.CategoriaNombre</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@trabajo.Titulo</li>
+            </ol>
+        </nav>
+    </div>
+</div>
 
-    <div class="columnas-form">
-        <div>
-            <h1 style="margin-bottom:8px;">@trabajo.Titulo</h1>
-            <p class="tenue" style="margin-bottom:32px;">@trabajo.CategoriaNombre</p>
-
-            @if (!string.IsNullOrWhiteSpace(trabajo.Descripcion))
-            {
-                <p style="font-size:1.05rem;">@trabajo.Descripcion</p>
-            }
-
-            <div class="media-detalle" style="margin-top:32px;">
-                @if (!trabajo.Medios.Any())
+<div class="container-fluid gallery py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                @if (!string.IsNullOrWhiteSpace(trabajo.Descripcion))
                 {
-                    <div class="vidrio vacio">
-                        <i class="fa-regular fa-images"></i>
-                        <p>Este trabajo todavía no tiene fotos ni videos.</p>
+                    <p class="fs-5 mb-5 wow fadeIn" data-wow-delay="0.1s">@trabajo.Descripcion</p>
+                }
+
+                @if (!medios.Any())
+                {
+                    <div class="galeria-vacia wow fadeIn" data-wow-delay="0.2s">
+                        <i class="far fa-images d-block"></i>
+                        <p class="fs-5 mb-0">Este trabajo todavía no tiene fotos ni videos.</p>
                     </div>
                 }
                 else
                 {
-                    @foreach (var media in trabajo.Medios.OrderBy(m => m.Orden))
-                    {
-                        var url = Model.ApiBaseUrl + media.Url;
+                    <div class="row g-4">
+                        @foreach (var media in medios)
+                        {
+                            var url = Model.ApiBaseUrl + media.Url;
 
-                        if (media.Tipo == TipoMedia.Imagen)
-                        {
-                            <img src="@url" alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
+                            <div class="col-12 wow fadeIn" data-wow-delay="0.2s">
+                                @if (media.Tipo == TipoMedia.Imagen)
+                                {
+                                    <div class="gallery-item medio-detalle">
+                                        <img src="@url" class="img-fluid w-100"
+                                             alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
+                                        <div class="gallery-icon">
+                                            <a href="@url" class="btn btn-primary btn-lg-square" data-lightbox="@grupo">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <video class="w-100" controls preload="metadata" playsinline>
+                                        <source src="@url" />
+                                        Tu navegador no puede reproducir este video.
+                                    </video>
+                                }
+                            </div>
                         }
-                        else
-                        {
-                            <video controls preload="metadata" playsinline>
-                                <source src="@url" />
-                                Tu navegador no puede reproducir este video.
-                            </video>
-                        }
-                    }
+                    </div>
                 }
+
+                <a asp-action="Index" class="btn btn-primary text-uppercase px-5 py-3 mt-5">
+                    <i class="fa fa-arrow-left me-2"></i>Volver a los trabajos
+                </a>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="bg-light p-5 panel-consulta wow fadeIn" data-wow-delay="0.3s">
+                    <h1 class="font-dancing-script text-primary">Consultanos</h1>
+                    <h3 class="mb-4">¿Querés algo así?</h3>
+                    <p class="mb-4">
+                        Contanos qué tenés en mente y te pasamos precio y disponibilidad.
+                    </p>
+
+                    <a href="@linkConsulta" target="_blank" rel="noopener"
+                       class="btn btn-primary text-uppercase w-100 py-3 mb-3 mx-0">
+                        <i class="fab fa-whatsapp me-2"></i>Consultar por WhatsApp
+                    </a>
+
+                    <a asp-action="Contacto" class="btn btn-dark text-uppercase w-100 py-3 mx-0">
+                        <i class="fa fa-envelope me-2"></i>Enviar un mensaje
+                    </a>
+                </div>
             </div>
         </div>
-
-        <aside class="vidrio" style="padding:32px;position:sticky;top:96px;">
-            <h3 style="font-size:1.15rem;">¿Querés algo así?</h3>
-            <p class="tenue chico">
-                Contanos qué tenés en mente y te pasamos precio y disponibilidad.
-            </p>
-
-            <a href="@linkConsulta" target="_blank" rel="noopener"
-               class="boton boton-whatsapp boton-ancho" style="margin-bottom:10px;">
-                <i class="fa-brands fa-whatsapp"></i>Consultar por WhatsApp
-            </a>
-
-            <a asp-action="Contacto" class="boton boton-borde boton-ancho">
-                <i class="fa-regular fa-envelope"></i>Enviar un mensaje
-            </a>
-        </aside>
     </div>
-</section>
+</div>

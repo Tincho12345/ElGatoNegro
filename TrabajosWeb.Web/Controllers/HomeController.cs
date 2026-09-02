@@ -84,6 +84,12 @@ public class HomeController : Controller
         return RedirectToAction(nameof(Contacto));
     }
 
+    // Temporal: prueba de la plantilla Salone. Se elimina al terminar la migración.
+    public IActionResult Prueba()
+    {
+        return View();
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() => View();
 }

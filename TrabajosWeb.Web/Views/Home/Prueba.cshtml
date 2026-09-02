@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Prueba de plantilla";
+    Layout = "_LayoutSalone";
+}
+
+<div class="container-fluid bg-light page-header py-5 mb-5">
+    <div class="container text-center py-5">
+        <h1 class="display-1 animated slideInLeft">Galería</h1>
+        <p class="animated slideInLeft mb-0">Prueba de la plantilla Salone</p>
+    </div>
+</div>
+
+<div class="container-fluid gallery py-5">
+    <div class="container">
+        <div class="text-center wow fadeIn" data-wow-delay="0.2s">
+            <h1 class="font-dancing-script text-primary">Galería</h1>
+            <h1 class="mb-5">Nuestros trabajos</h1>
+        </div>
+        <div class="row g-0">
+            @for (var i = 1; i <= 6; i++)
+            {
+                var col = (i == 1 || i == 6) ? "col-md-6" : "col-md-3";
+                var img = $"/plantilla/img/gallery-{i}.jpg";
+                <div class="@col wow fadeIn" data-wow-delay="0.2s">
+                    <div class="gallery-item h-100">
+                        <img src="@img" class="img-fluid w-100 h-100" alt="Trabajo @i" />
+                        <div class="gallery-icon">
+                            <a href="@img" class="btn btn-primary btn-lg-square" data-lightbox="galeria">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

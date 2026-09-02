@@ -113,7 +113,7 @@
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
                                     <form asp-action="EliminarTrabajo" method="post" class="en-linea"
-                                          onsubmit="return confirm('Se elimina el trabajo y todas sus fotos y videos. ¿Continuar?');">
+                                          data-confirmar="Se elimina el trabajo y todas sus fotos y videos. ¿Continuar?">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@trabajo.Id" />
                                         <button type="submit" class="boton-icono" title="Eliminar">

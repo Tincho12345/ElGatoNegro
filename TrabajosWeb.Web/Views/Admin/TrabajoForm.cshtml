@@ -113,7 +113,7 @@
                             }
 
                             <form asp-action="EliminarMedia" method="post"
-                                  onsubmit="return confirm('¿Eliminar este archivo?');">
+                                  data-confirmar="¿Eliminar este archivo?">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="trabajoId" value="@Model.Id" />
                                 <input type="hidden" name="mediaId" value="@media.Id" />
