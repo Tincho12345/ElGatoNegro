@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TrabajosWeb.Api.Entities;
 
@@ -14,6 +15,23 @@ public class Trabajo : EntidadAuditable
 
     /// <summary>Destacado: aparece primero en la galería.</summary>
     public bool Destacado { get; set; }
+
+    /// <summary>Precio actual. Opcional: no todos los trabajos publican precio.</summary>
+    [Column(TypeName = "decimal(12,2)")]
+    public decimal? Precio { get; set; }
+
+    /// <summary>Precio anterior, solo para mostrarlo tachado al lado del actual.</summary>
+    [Column(TypeName = "decimal(12,2)")]
+    public decimal? PrecioAnterior { get; set; }
+
+    /// <summary>Cartelito corto sobre la foto: "35% OFF", "2x1". Si se deja vacío y hay
+    /// precio anterior, el porcentaje se calcula solo.</summary>
+    [StringLength(40)]
+    public string? EtiquetaOferta { get; set; }
+
+    /// <summary>Línea libre: "Pague dos y lleve tres".</summary>
+    [StringLength(200)]
+    public string? TextoOferta { get; set; }
 
     public Guid CategoriaId { get; set; }
     public Categoria? Categoria { get; set; }

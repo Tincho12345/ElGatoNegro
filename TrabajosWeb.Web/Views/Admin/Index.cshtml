@@ -22,11 +22,11 @@
 
     <div class="resumen">
         <div class="vidrio dato">
-            <span class="cifra">@Model.Trabajos.Count</span>
+            <span class="cifra" data-contador="total">@Model.Trabajos.Count</span>
             <span class="rotulo">Trabajos cargados</span>
         </div>
         <div class="vidrio dato">
-            <span class="cifra">@Model.Trabajos.Count(t => t.Publicado)</span>
+            <span class="cifra" data-contador="publicados">@Model.Trabajos.Count(t => t.Publicado)</span>
             <span class="rotulo">Visibles en la web</span>
         </div>
         <div class="vidrio dato">
@@ -62,7 +62,7 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody data-vacio="Ya no quedan trabajos cargados.">
                     @foreach (var trabajo in Model.Trabajos)
                     {
                         var portada = trabajo.Medios
@@ -113,7 +113,9 @@
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
                                     <form asp-action="EliminarTrabajo" method="post" class="en-linea"
-                                          data-confirmar="Se elimina el trabajo y todas sus fotos y videos. ¿Continuar?">
+                                          data-confirmar="Se elimina el trabajo y todas sus fotos y videos. ¿Continuar?"
+                                          data-ajax data-quitar="tr"
+                                          data-exito="Trabajo eliminado.">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@trabajo.Id" />
                                         <button type="submit" class="boton-icono" title="Eliminar">

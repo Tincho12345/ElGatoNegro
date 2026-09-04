@@ -60,6 +60,13 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllersWithViews();
 
+// ---------- Cultura ----------
+// Los precios se muestran como $ 239.999,00 sin depender de la configuración
+// regional del servidor.
+var culturaArgentina = new System.Globalization.CultureInfo("es-AR");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culturaArgentina;
+
 var app = builder.Build();
 
 // Va primero: el resto del pipeline necesita ver el esquema real.

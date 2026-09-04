@@ -1,67 +1,121 @@
 ﻿@model TrabajosWeb.Web.Models.ContactoViewModel
 @{
     ViewData["Title"] = "Contacto";
+    Layout = "_LayoutSalone";
 }
 
-<section class="contenedor seccion">
-    <div style="max-width:620px;margin-inline:auto;">
-        <h1 class="centro">Escribinos</h1>
-        <p class="tenue centro" style="margin-inline:auto;margin-bottom:40px;">
+<div class="container-fluid bg-light page-header py-5 mb-5">
+    <div class="container text-center py-5">
+        <h1 class="font-dancing-script text-primary animated slideInLeft">Contacto</h1>
+        <h1 class="display-2 mb-3 animated slideInLeft">Escribinos</h1>
+        <p class="fs-5 mb-0 animated slideInLeft">
             Contanos qué buscás y te respondemos con precio y horarios disponibles.
         </p>
+    </div>
+</div>
 
-        <div class="vidrio" style="padding:36px;">
-            <form asp-action="Contacto" method="post">
-                @Html.AntiForgeryToken()
+<div class="container-fluid py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-7 wow fadeIn" data-wow-delay="0.2s">
+                <h1 class="font-dancing-script text-primary">Consultanos</h1>
+                <h3 class="mb-4">Mandanos tu mensaje</h3>
 
-                <div asp-validation-summary="ModelOnly"></div>
+                <form asp-action="Contacto" method="post">
+                    @Html.AntiForgeryToken()
 
-                <div class="campo">
-                    <label asp-for="Consulta.Nombre">Nombre</label>
-                    <input asp-for="Consulta.Nombre" class="entrada" autocomplete="name" />
-                    <span asp-validation-for="Consulta.Nombre"></span>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Consulta.Nombre" class="form-label">Nombre</label>
+                            <input asp-for="Consulta.Nombre" class="form-control border-0 bg-light px-4"
+                                   style="height: 55px;" autocomplete="name" />
+                            <span asp-validation-for="Consulta.Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Consulta.Email" class="form-label">Email</label>
+                            <input asp-for="Consulta.Email" class="form-control border-0 bg-light px-4"
+                                   style="height: 55px;" type="email" autocomplete="email" />
+                            <span asp-validation-for="Consulta.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Consulta.Telefono" class="form-label">
+                                Teléfono <span class="text-muted">(opcional)</span>
+                            </label>
+                            <input asp-for="Consulta.Telefono" class="form-control border-0 bg-light px-4"
+                                   style="height: 55px;" autocomplete="tel" placeholder="3751 123456" />
+                            <div class="form-text">Si lo dejás, te podemos contestar por WhatsApp.</div>
+                            <span asp-validation-for="Consulta.Telefono" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Consulta.Mensaje" class="form-label">Mensaje</label>
+                            <textarea asp-for="Consulta.Mensaje" class="form-control border-0 bg-light px-4 py-3"
+                                      rows="6"
+                                      placeholder="Quiero un balayage, tengo el pelo hasta los hombros y color castaño."></textarea>
+                            <span asp-validation-for="Consulta.Mensaje" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary text-uppercase w-100 py-3 mx-0">
+                                <i class="fa-regular fa-paper-plane me-2"></i>Enviar consulta
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-lg-5 wow fadeIn" data-wow-delay="0.4s">
+                <div class="bg-light p-5 h-100">
+                    <h1 class="font-dancing-script text-primary">Directo</h1>
+                    <h3 class="mb-4">Otras formas</h3>
+
+                    <p class="mb-4">
+                        Si querés una respuesta más rápida, escribinos por WhatsApp. Contestamos en el día.
+                    </p>
+
+                    <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
+                       class="btn btn-primary text-uppercase w-100 py-3 mb-4 mx-0">
+                        <i class="fa-brands fa-whatsapp me-2"></i>Escribinos por WhatsApp
+                    </a>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Contacto.Email))
+                    {
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fa-solid fa-envelope text-primary me-3 fs-5"></i>
+                            <a href="mailto:@Model.Contacto.Email" class="text-dark">@Model.Contacto.Email</a>
+                        </div>
+                    }
+
+                    @if (Model.Contacto.TieneRedes)
+                    {
+                        <hr class="my-4" style="opacity:.15;" />
+                        <h5 class="text-primary mb-3">Seguinos</h5>
+                        <div class="d-flex">
+                            @if (!string.IsNullOrWhiteSpace(Model.Contacto.Facebook))
+                            {
+                                <a class="btn btn-primary btn-sm-square me-3" href="@Model.Contacto.Facebook"
+                                   target="_blank" rel="noopener" aria-label="Facebook">
+                                    <i class="fa-brands fa-facebook-f"></i>
+                                </a>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Contacto.Instagram))
+                            {
+                                <a class="btn btn-primary btn-sm-square me-3" href="@Model.Contacto.Instagram"
+                                   target="_blank" rel="noopener" aria-label="Instagram">
+                                    <i class="fa-brands fa-instagram"></i>
+                                </a>
+                            }
+                        </div>
+                    }
                 </div>
-
-                <div class="campo">
-                    <label asp-for="Consulta.Email">Email</label>
-                    <input asp-for="Consulta.Email" class="entrada" type="email" autocomplete="email" />
-                    <span asp-validation-for="Consulta.Email"></span>
-                </div>
-
-                <div class="campo">
-                    <label asp-for="Consulta.Telefono">
-                        Teléfono <span class="ayuda">(opcional)</span>
-                    </label>
-                    <input asp-for="Consulta.Telefono" class="entrada" autocomplete="tel"
-                           placeholder="3751 123456" />
-                    <span class="ayuda chico">Si lo dejás, te podemos contestar por WhatsApp.</span>
-                    <span asp-validation-for="Consulta.Telefono"></span>
-                </div>
-
-                <div class="campo">
-                    <label asp-for="Consulta.Mensaje">Mensaje</label>
-                    <textarea asp-for="Consulta.Mensaje" class="entrada" rows="5"
-                              placeholder="Quiero un balayage, tengo el pelo hasta los hombros y color castaño."></textarea>
-                    <span asp-validation-for="Consulta.Mensaje"></span>
-                </div>
-
-                <button type="submit" class="boton boton-primario boton-ancho">
-                    <i class="fa-regular fa-paper-plane"></i>Enviar consulta
-                </button>
-            </form>
-        </div>
-
-        <div class="vidrio-suave centro" style="padding:28px;margin-top:20px;">
-            <p class="chico sin-margen" style="margin-inline:auto;margin-bottom:16px;">
-                ¿Preferís una respuesta más rápida?
-            </p>
-            <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
-               class="boton boton-whatsapp">
-                <i class="fa-brands fa-whatsapp"></i>Escribinos por WhatsApp
-            </a>
+            </div>
         </div>
     </div>
-</section>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

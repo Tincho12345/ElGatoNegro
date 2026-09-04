@@ -38,6 +38,24 @@ public class CategoriasController : ControllerBase
         return Ok(lista);
     }
 
+    /// <summary>
+    /// Servicios que se ofrecen en la home. A diferencia de GetPublicas, no exige
+    /// que haya trabajos cargados: la peluquería ofrece el servicio igual.
+    /// </summary>
+    [HttpGet("servicios")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<CategoriaDto>>> GetServicios(CancellationToken ct)
+    {
+        var lista = await _context.Categorias
+            .AsNoTracking()
+            .Where(c => c.Activa && c.MostrarEnServicios)
+            .OrderBy(c => c.Orden).ThenBy(c => c.Nombre)
+            .ProjectTo<CategoriaDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(ct);
+
+        return Ok(lista);
+    }
+
     [HttpGet("admin")]
     [Authorize(Policy = "SoloAdmin")]
     public async Task<ActionResult<List<CategoriaDto>>> GetTodas(CancellationToken ct)

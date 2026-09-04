@@ -19,6 +19,7 @@
         <div asp-validation-summary="ModelOnly"></div>
 
         <div class="columnas-form">
+
             <div class="vidrio" style="padding: 32px;">
                 <div class="campo">
                     <label asp-for="Trabajo.Titulo">Título</label>
@@ -43,6 +44,60 @@
                     </select>
                     <span asp-validation-for="Trabajo.CategoriaId"></span>
                 </div>
+
+                <hr style="margin:28px 0;opacity:.15;" />
+
+                <h3 style="font-size:1.05rem;">Precio y oferta</h3>
+                <p class="ayuda chico" style="margin-bottom:20px;">
+                    Todo esto es opcional. Lo que dejes vacío no se muestra en la web.
+                </p>
+
+                <div class="campo">
+                    <label asp-for="Trabajo.Precio">
+                        Precio <span class="ayuda">(opcional)</span>
+                    </label>
+                    <input asp-for="Trabajo.Precio" class="entrada" type="number" step="0.01" min="0"
+                           style="max-width:220px;" placeholder="239999" />
+                    <span class="ayuda chico">Sin puntos ni símbolo. Para decimales usá punto: 1500.50</span>
+                    <span asp-validation-for="Trabajo.Precio"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Trabajo.PrecioAnterior">
+                        Precio anterior <span class="ayuda">(opcional)</span>
+                    </label>
+                    <input asp-for="Trabajo.PrecioAnterior" class="entrada" type="number" step="0.01" min="0"
+                           style="max-width:220px;" placeholder="372252" />
+                    <span class="ayuda chico">
+                        Se muestra tachado al lado del precio. Si lo cargás, el porcentaje de
+                        descuento se calcula solo.
+                    </span>
+                    <span asp-validation-for="Trabajo.PrecioAnterior"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Trabajo.EtiquetaOferta">
+                        Etiqueta <span class="ayuda">(opcional)</span>
+                    </label>
+                    <input asp-for="Trabajo.EtiquetaOferta" class="entrada" style="max-width:220px;"
+                           placeholder="2x1" />
+                    <span class="ayuda chico">
+                        Cartelito corto sobre la foto. Si lo dejás vacío y cargaste los dos precios,
+                        aparece el porcentaje automático.
+                    </span>
+                    <span asp-validation-for="Trabajo.EtiquetaOferta"></span>
+                </div>
+
+                <div class="campo">
+                    <label asp-for="Trabajo.TextoOferta">
+                        Texto de la oferta <span class="ayuda">(opcional)</span>
+                    </label>
+                    <input asp-for="Trabajo.TextoOferta" class="entrada"
+                           placeholder="Pague dos y lleve tres" />
+                    <span asp-validation-for="Trabajo.TextoOferta"></span>
+                </div>
+
+                <hr style="margin:28px 0;opacity:.15;" />
 
                 <div class="campo">
                     <label for="archivos">Fotos y videos</label>
@@ -97,7 +152,7 @@
             }
             else
             {
-                <div class="medios">
+                <div class="medios" data-vacio="Ya no quedan archivos cargados.">
                     @foreach (var media in Model.MediosActuales)
                     {
                         var url = Model.ApiBaseUrl + media.Url;
@@ -113,7 +168,9 @@
                             }
 
                             <form asp-action="EliminarMedia" method="post"
-                                  data-confirmar="¿Eliminar este archivo?">
+                                  data-confirmar="¿Eliminar este archivo?"
+                                  data-ajax data-quitar=".medio"
+                                  data-exito="Archivo eliminado.">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="trabajoId" value="@Model.Id" />
                                 <input type="hidden" name="mediaId" value="@media.Id" />

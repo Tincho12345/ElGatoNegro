@@ -61,6 +61,36 @@
                 </label>
             </div>
 
+            <hr style="margin:28px 0;opacity:.15;" />
+
+            <h3 style="font-size:1.05rem;">Sección Servicios de la home</h3>
+            <p class="ayuda chico" style="margin-bottom:20px;">
+                Esto no afecta la galería. Es lo que se muestra en la portada como servicio ofrecido,
+                aunque todavía no haya trabajos cargados.
+            </p>
+
+            <div class="opcion">
+                <input asp-for="Categoria.MostrarEnServicios" type="checkbox" />
+                <label asp-for="Categoria.MostrarEnServicios">
+                    Mostrar como servicio
+                    <span class="ayuda chico" style="display:block;font-weight:400;">
+                        Desmarcala si es una categoría interna que no querés ofrecer en la portada.
+                    </span>
+                </label>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Categoria.TextoServicio">
+                    Texto del servicio <span class="ayuda">(opcional)</span>
+                </label>
+                <textarea asp-for="Categoria.TextoServicio" class="entrada" rows="4"
+                          placeholder="Dos o tres líneas contando en qué consiste, pensadas para una clienta que no conoce el servicio."></textarea>
+                <span class="ayuda chico">
+                    Si lo dejás vacío, se usa la descripción de arriba.
+                </span>
+                <span asp-validation-for="Categoria.TextoServicio"></span>
+            </div>
+
             <button type="submit" class="boton boton-primario" style="margin-top:8px;">
                 <i class="fa-solid fa-check"></i>Guardar categoría
             </button>

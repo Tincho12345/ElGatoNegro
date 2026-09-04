@@ -65,6 +65,10 @@ public class AdminController : Controller
                 Titulo = trabajo.Titulo,
                 Descripcion = trabajo.Descripcion,
                 CategoriaId = trabajo.CategoriaId,
+                Precio = trabajo.Precio,
+                PrecioAnterior = trabajo.PrecioAnterior,
+                EtiquetaOferta = trabajo.EtiquetaOferta,
+                TextoOferta = trabajo.TextoOferta,
                 Publicado = trabajo.Publicado,
                 Destacado = trabajo.Destacado
             },
@@ -142,6 +146,23 @@ public class AdminController : Controller
     {
         var (ok, error) = await _api.DeleteAsync($"api/Trabajos/{id}", ct);
 
+        // Desde el panel se llama por fetch: respondemos JSON con los contadores
+        // ya recalculados, para no recargar la pagina.
+        if (EsPeticionAjax())
+        {
+            if (!ok)
+                return Json(new { ok = false, error = error ?? "No se pudo eliminar." });
+
+            var trabajos = await _api.GetAsync<List<TrabajoDto>>("api/Trabajos/admin", ct) ?? new();
+
+            return Json(new
+            {
+                ok = true,
+                total = trabajos.Count,
+                publicados = trabajos.Count(t => t.Publicado)
+            });
+        }
+
         if (ok)
             TempData["Exito"] = "Trabajo eliminado.";
         else
@@ -155,6 +176,11 @@ public class AdminController : Controller
     public async Task<IActionResult> EliminarMedia(Guid trabajoId, Guid mediaId, CancellationToken ct)
     {
         var (ok, error) = await _api.DeleteAsync($"api/trabajos/{trabajoId}/media/{mediaId}", ct);
+
+        // Desde la pantalla de edición se llama por fetch: respondemos JSON
+        // para no recargar. Sin JavaScript, sigue funcionando la redirección.
+        if (EsPeticionAjax())
+            return Json(new { ok, error = ok ? null : (error ?? "No se pudo eliminar el archivo.") });
 
         if (!ok)
             TempData["Error"] = error ?? "No se pudo eliminar el archivo.";
@@ -191,6 +217,8 @@ public class AdminController : Controller
                 Nombre = categoria.Nombre,
                 Descripcion = categoria.Descripcion,
                 Icono = categoria.Icono,
+                TextoServicio = categoria.TextoServicio,
+                MostrarEnServicios = categoria.MostrarEnServicios,
                 Orden = categoria.Orden,
                 Activa = categoria.Activa
             }
@@ -288,4 +316,8 @@ public class AdminController : Controller
             .Select(c => new SelectListItem(c.Nombre, c.Id.ToString()))
             .ToList();
     }
+
+    /// <summary>La petición vino por fetch desde la vista, no por navegación del navegador.</summary>
+    private bool EsPeticionAjax() =>
+        Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 }

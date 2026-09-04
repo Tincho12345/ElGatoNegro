@@ -18,6 +18,13 @@ public class Categoria : EntidadAuditable
     [StringLength(60)]
     public string? Icono { get; set; }
 
+    /// <summary>Texto que se muestra en la tarjeta de la sección Servicios de la home.</summary>
+    [StringLength(500)]
+    public string? TextoServicio { get; set; }
+
+    /// <summary>Si aparece como servicio ofrecido en la home, más allá de la galería.</summary>
+    public bool MostrarEnServicios { get; set; } = true;
+
     public int Orden { get; set; }
 
     public bool Activa { get; set; } = true;

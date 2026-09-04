@@ -31,11 +31,13 @@ public class HomeController : Controller
 
         var trabajos = await _api.GetAsync<List<TrabajoDto>>(ruta, ct) ?? new();
         var categorias = await _api.GetAsync<List<CategoriaDto>>("api/Categorias", ct) ?? new();
+        var servicios = await _api.GetAsync<List<CategoriaDto>>("api/Categorias/servicios", ct) ?? new();
 
         return View(new GaleriaViewModel
         {
             Trabajos = trabajos,
             Categorias = categorias,
+            Servicios = servicios,
             CategoriaActual = categoria,
             Contacto = _contacto,
             ApiBaseUrl = _apiBaseUrl
@@ -82,12 +84,6 @@ public class HomeController : Controller
 
         TempData["Exito"] = "Recibimos tu mensaje. Te respondemos a la brevedad.";
         return RedirectToAction(nameof(Contacto));
-    }
-
-    // Temporal: prueba de la plantilla Salone. Se elimina al terminar la migración.
-    public IActionResult Prueba()
-    {
-        return View();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

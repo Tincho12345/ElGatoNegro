@@ -1198,3 +1198,40 @@ input[type="file"].entrada {
     .ojo[aria-pressed="true"] {
         color: var(--acento);
     }
+/* --- Carrusel del hero ---
+   Las fotos verticales estiran la fila. Se recorta a una altura fija
+   y el texto queda centrado al lado. */
+.header-carousel,
+.header-carousel .owl-stage-outer,
+.header-carousel .owl-stage,
+.header-carousel .owl-item {
+    height: 620px;
+}
+
+    .header-carousel img {
+        width: 100%;
+        height: 620px;
+        object-fit: cover;
+        object-position: center 25%;
+    }
+
+.hero-header .hero-header-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 620px;
+}
+
+@media (max-width: 991.98px) {
+    .header-carousel,
+    .header-carousel .owl-stage-outer,
+    .header-carousel .owl-stage,
+    .header-carousel .owl-item,
+    .header-carousel img {
+        height: 420px;
+    }
+
+    .hero-header .hero-header-text {
+        min-height: auto;
+    }
+}
