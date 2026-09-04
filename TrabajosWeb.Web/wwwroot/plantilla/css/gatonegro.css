@@ -511,3 +511,482 @@
     font-size: 14px;
     color: #1e8449;
 }
+/* ============================================================
+   PEGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   ============================================================ */
+
+/* --- Carrusel del hero con datos del trabajo --- */
+.header-carousel,
+.header-carousel .owl-stage-outer,
+.header-carousel .owl-stage,
+.header-carousel .owl-item {
+    height: 620px;
+}
+
+.hero-slide {
+    position: relative;
+    display: block;
+    height: 620px;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+    .hero-slide img {
+        width: 100%;
+        height: 620px;
+        object-fit: cover;
+        object-position: center 25%;
+        transition: transform 6s ease;
+    }
+
+    .hero-slide:hover img {
+        transform: scale(1.06);
+    }
+
+.hero-etiqueta {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 2;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #fff;
+    background: #1e8449;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
+}
+
+.hero-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 32px 30px 28px;
+    color: #fff;
+    background: linear-gradient(to top, rgba(0, 0, 0, .88) 25%, rgba(0, 0, 0, 0));
+}
+
+.hero-categoria {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bs-primary);
+    margin-bottom: 6px;
+}
+
+.hero-titulo {
+    margin: 0;
+    font-size: 28px;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.hero-precio {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.hero-precio-actual {
+    font-size: 32px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1;
+}
+
+.hero-precio-anterior {
+    font-size: 18px;
+    color: rgba(255, 255, 255, .65);
+    text-decoration: line-through;
+}
+
+.hero-oferta {
+    display: block;
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--bs-primary);
+}
+
+.hero-vermas {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #fff;
+    transition: .3s;
+}
+
+    .hero-vermas i {
+        margin-left: 8px;
+        transition: .3s;
+    }
+
+.hero-slide:hover .hero-vermas {
+    color: var(--bs-primary);
+}
+
+    .hero-slide:hover .hero-vermas i {
+        transform: translateX(6px);
+    }
+
+.hero-header .hero-header-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 620px;
+}
+
+@media (max-width: 991.98px) {
+    .header-carousel,
+    .header-carousel .owl-stage-outer,
+    .header-carousel .owl-stage,
+    .header-carousel .owl-item,
+    .hero-slide,
+    .hero-slide img {
+        height: 460px;
+    }
+
+    .hero-header .hero-header-text {
+        min-height: auto;
+    }
+
+    .hero-titulo {
+        font-size: 23px;
+    }
+
+    .hero-precio-actual {
+        font-size: 26px;
+    }
+}
+
+
+/* --- Precios y ofertas sobre la pieza de la galería --- */
+.marcas-derecha {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+    /* Anulamos el posicionamiento propio: ahora lo maneja el contenedor. */
+    .marcas-derecha .marca-video {
+        position: static;
+        top: auto;
+        right: auto;
+    }
+
+.marca-oferta {
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #fff;
+    background: #1e8449;
+    border-radius: 4px;
+}
+
+.pieza-precio {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.precio-actual {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.precio-anterior {
+    font-size: 15px;
+    color: rgba(255, 255, 255, .7);
+    text-decoration: line-through;
+}
+
+.pieza-oferta {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--bs-primary);
+}
+
+@media (max-width: 575.98px) {
+    .precio-actual {
+        font-size: 19px;
+    }
+
+    .marca-oferta {
+        font-size: 12px;
+        padding: 4px 9px;
+    }
+}
+
+
+/* --- Bordes redondeados y sombras --- */
+.gallery .gallery-item {
+    border-radius: 14px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, .12);
+    transition: box-shadow .4s, transform .4s;
+}
+
+    .gallery .gallery-item:hover {
+        box-shadow: 0 16px 40px rgba(0, 0, 0, .22);
+        transform: translateY(-4px);
+    }
+
+.hero-slide {
+    border-radius: 14px;
+}
+
+.service .service-item {
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .55);
+    backdrop-filter: blur(4px);
+    transition: box-shadow .4s, transform .4s, background .4s;
+}
+
+    .service .service-item:hover {
+        background: rgba(255, 255, 255, .92);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, .12);
+        transform: translateY(-5px);
+    }
+
+.panel-consulta,
+.medio-detalle.gallery-item {
+    border-radius: 14px;
+}
+
+.panel-consulta {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .10);
+}
+
+
+/* --- Filtro de la galería sin recarga --- */
+
+/* Entrada escalonada de cada pieza. Reemplaza a wow, que no vuelve a
+   aplicarse sobre el contenido insertado por fetch. */
+@keyframes entraPieza {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.entra {
+    animation: entraPieza .45s ease both;
+}
+
+#galeria-contenido {
+    position: relative;
+    transition: opacity .2s;
+}
+
+    #galeria-contenido.cargando {
+        opacity: .35;
+        pointer-events: none;
+    }
+
+        #galeria-contenido.cargando::after {
+            content: "";
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            width: 42px;
+            height: 42px;
+            margin-left: -21px;
+            border: 3px solid rgba(0, 0, 0, .12);
+            border-top-color: var(--bs-primary);
+            border-radius: 50%;
+            animation: giraFiltro .7s linear infinite;
+        }
+
+@keyframes giraFiltro {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .entra {
+        animation: none;
+    }
+
+    .hero-slide img {
+        transition: none;
+    }
+}
+
+
+/* --- Ficha de datos del detalle --- */
+.ficha {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    padding: 18px 0;
+    border-top: 1px solid rgba(0, 0, 0, .08);
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+}
+
+.ficha-dato {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bs-dark);
+}
+
+    .ficha-dato i {
+        color: var(--bs-primary);
+    }
+
+    .ficha-dato.destacado {
+        color: var(--bs-primary);
+    }
+
+
+/* --- Precio en el panel lateral del detalle --- */
+.precio-panel {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.precio-panel-actual {
+    font-family: "Playfair Display", serif;
+    font-size: 34px;
+    font-weight: 500;
+    color: var(--bs-dark);
+    line-height: 1.1;
+}
+
+.precio-panel-anterior {
+    font-size: 18px;
+    color: rgba(0, 0, 0, .45);
+    text-decoration: line-through;
+}
+
+.precio-panel-nota {
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-size: 14px;
+    color: #1e8449;
+}
+
+/* ============================================================
+   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   (va después del bloque anterior, no lo reemplaza)
+   ============================================================ */
+
+/* --- Transición entre vistas --- */
+#contenido {
+    transition: opacity .35s ease, transform .35s ease;
+}
+
+.pagina-entrando #contenido {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.pagina-saliendo #contenido {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* El pie acompaña, más discreto. */
+.pagina-entrando .footer,
+.pagina-saliendo .footer {
+    opacity: 0;
+}
+
+.footer {
+    transition: opacity .35s ease;
+}
+
+
+/* --- Botón volver --- */
+.volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 28px 14px 14px;
+    border: 2px solid var(--bs-primary);
+    border-radius: 40px;
+    background: transparent;
+    color: var(--bs-dark);
+    font-family: "Playfair Display", serif;
+    font-size: 15px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    transition: background .35s, color .35s, box-shadow .35s;
+}
+
+    .volver:hover {
+        background: var(--bs-primary);
+        color: var(--bs-dark);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, .16);
+    }
+
+.volver-flecha {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: var(--bs-dark);
+    transition: transform .35s, background .35s;
+}
+
+.volver:hover .volver-flecha {
+    background: var(--bs-dark);
+    color: var(--bs-white);
+    transform: translateX(-5px);
+}
+
+/* Sobre fondos oscuros. */
+.bg-dark .volver,
+.footer .volver {
+    color: var(--bs-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #contenido,
+    .footer,
+    .volver,
+    .volver-flecha {
+        transition: none;
+    }
+
+    .pagina-entrando #contenido {
+        opacity: 1;
+        transform: none;
+    }
+}

@@ -5,6 +5,9 @@
     ViewData["Title"] = trabajo.Titulo;
     Layout = "_LayoutSalone";
 
+    ViewData["VolverUrl"] = Url.Action("Index", "Home");
+    ViewData["VolverTexto"] = "Volver a los trabajos";
+
     var mensaje = $"{Model.Contacto.MensajePredeterminado} Vi este trabajo: {trabajo.Titulo}";
     var linkConsulta = $"https://wa.me/{Model.Contacto.WhatsAppNumero}?text={Uri.EscapeDataString(mensaje)}";
 
@@ -35,6 +38,10 @@
 
 <div class="container-fluid gallery py-5">
     <div class="container">
+        <div class="mb-4 wow fadeIn" data-wow-delay="0.1s">
+            <partial name="_Volver" />
+        </div>
+
         <div class="row g-5">
             <div class="col-lg-8">
                 @if (!string.IsNullOrWhiteSpace(trabajo.Descripcion))
@@ -92,7 +99,7 @@
                                              alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
                                         <div class="gallery-icon">
                                             <a href="@url" class="btn btn-primary btn-lg-square" data-lightbox="@grupo"
-                                               data-title="@trabajo.Titulo">
+                                               data-title="@trabajo.Titulo" data-sin-transicion>
                                                 <i class="fa-solid fa-expand"></i>
                                             </a>
                                         </div>
@@ -110,9 +117,9 @@
                     </div>
                 }
 
-                <a asp-action="Index" class="btn btn-primary text-uppercase px-5 py-3 mt-5">
-                    <i class="fa-solid fa-arrow-left me-2"></i>Volver a los trabajos
-                </a>
+                <div class="mt-5">
+                    <partial name="_Volver" />
+                </div>
             </div>
 
             <div class="col-lg-4">

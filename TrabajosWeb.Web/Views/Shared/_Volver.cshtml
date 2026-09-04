@@ -1,0 +1,34 @@
+﻿@*
+    Botón "volver" reutilizable.
+
+    Uso simple, vuelve a la galería:
+        <partial name="_Volver" />
+
+    Uso con destino propio:
+        @{ ViewData["VolverUrl"] = Url.Action("Index", "Admin"); }
+        @{ ViewData["VolverTexto"] = "Volver al panel"; }
+        <partial name="_Volver" />
+
+    Si no se indica destino, usa la página anterior cuando viene de este
+    mismo sitio; si no, la galería.
+*@
+@{
+    var textoVolver = ViewData["VolverTexto"] as string ?? "Volver";
+
+    var urlVolver = ViewData["VolverUrl"] as string;
+
+    if (string.IsNullOrWhiteSpace(urlVolver))
+    {
+        var anterior = Context.Request.Headers.Referer.ToString();
+        var esDelSitio = !string.IsNullOrWhiteSpace(anterior)
+            && Uri.TryCreate(anterior, UriKind.Absolute, out var uri)
+            && uri.Host == Context.Request.Host.Host;
+
+        urlVolver = esDelSitio ? anterior : Url.Action("Index", "Home");
+    }
+}
+
+<a href="@urlVolver" class="volver">
+    <span class="volver-flecha"><i class="fa-solid fa-arrow-left"></i></span>
+    <span class="volver-texto">@textoVolver</span>
+</a>

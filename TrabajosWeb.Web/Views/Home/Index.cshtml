@@ -7,14 +7,14 @@
     var demoras = new[] { "0.2s", "0.4s", "0.6s" };
 
     // El carrusel del hero usa los destacados; si no hay, los primeros trabajos.
-    var destacados = Model.Trabajos.Where(t => t.Destacado).ToList();
-    if (!destacados.Any())
-        destacados = Model.Trabajos.Take(3).ToList();
+    // Solo entran los que tienen al menos una foto.
+    var enHero = Model.Trabajos.Where(t => t.Destacado).ToList();
+    if (!enHero.Any())
+        enHero = Model.Trabajos.ToList();
 
-    var portadasHero = destacados
-        .Select(t => t.Medios.OrderBy(m => m.Orden).FirstOrDefault(m => m.Tipo == TipoMedia.Imagen))
-        .Where(m => m is not null)
-        .Take(3)
+    enHero = enHero
+        .Where(t => t.Medios.Any(m => m.Tipo == TipoMedia.Imagen))
+        .Take(5)
         .ToList();
 }
 
@@ -22,7 +22,7 @@
 <div class="container-fluid p-0 hero-header bg-light mb-5">
     <div class="container p-0">
         <div class="row g-0 align-items-center">
-            <div class="@(portadasHero.Any() ? "col-lg-6" : "col-12") hero-header-text py-5">
+            <div class="@(enHero.Any() ? "col-lg-6" : "col-12") hero-header-text py-5">
                 <div class="py-5 px-3 ps-lg-0">
                     <h1 class="font-dancing-script text-primary animated slideInLeft">Bienvenida</h1>
                     <h1 class="display-1 mb-4 animated slideInLeft">El Gato Negro</h1>
@@ -59,14 +59,50 @@
                     </div>
                 </div>
             </div>
-            @if (portadasHero.Any())
+            @if (enHero.Any())
             {
                 <div class="col-lg-6">
                     <div class="owl-carousel header-carousel animated fadeIn">
-                        @foreach (var portada in portadasHero)
+                        @foreach (var destacado in enHero)
                         {
-                            <img class="img-fluid" src="@(Model.ApiBaseUrl + portada!.Url)"
-                                 alt="@portada.TextoAlternativo" />
+                            var foto = destacado.Medios
+                                .OrderBy(m => m.Orden)
+                                .First(m => m.Tipo == TipoMedia.Imagen);
+
+                            var etiquetaHero = destacado.EtiquetaCalculada;
+
+                            <a asp-action="Detalle" asp-route-id="@destacado.Id" class="hero-slide">
+                                <img src="@(Model.ApiBaseUrl + foto.Url)"
+                                     alt="@(foto.TextoAlternativo ?? destacado.Titulo)" />
+
+                                @if (!string.IsNullOrWhiteSpace(etiquetaHero))
+                                {
+                                    <span class="hero-etiqueta">@etiquetaHero</span>
+                                }
+
+                                <div class="hero-info">
+                                    <span class="hero-categoria">@destacado.CategoriaNombre</span>
+                                    <h3 class="hero-titulo">@destacado.Titulo</h3>
+
+                                    @if (destacado.Precio.HasValue)
+                                    {
+                                        <div class="hero-precio">
+                                            @if (destacado.PrecioAnterior > destacado.Precio)
+                                            {
+                                                <span class="hero-precio-anterior">@destacado.PrecioAnterior!.Value.ToString("C0")</span>
+                                            }
+                                            <span class="hero-precio-actual">@destacado.Precio.Value.ToString("C0")</span>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(destacado.TextoOferta))
+                                    {
+                                        <span class="hero-oferta">@destacado.TextoOferta</span>
+                                    }
+
+                                    <span class="hero-vermas">Ver el trabajo <i class="fa-solid fa-arrow-right"></i></span>
+                                </div>
+                            </a>
                         }
                     </div>
                 </div>
@@ -97,7 +133,8 @@
                         <div class="service-item border h-100 p-5 text-center @(esProducto ? "service-item-producto" : "")">
                             @if (!string.IsNullOrWhiteSpace(servicio.Icono))
                             {
-                                <i class="@servicio.Icono fa-3x text-primary mb-4 @(esProducto ? "fa-bounce" : "")" style="--fa-animation-duration: 3s;"></i>
+                                <i class="@servicio.Icono fa-3x text-primary mb-4 @(esProducto ? "fa-bounce" : "")"
+                                   style="--fa-animation-duration: 3s;"></i>
                             }
                             <h4 class="mb-3">@servicio.Nombre</h4>
                             @if (!string.IsNullOrWhiteSpace(texto))
@@ -108,14 +145,16 @@
                             @if (esProducto)
                             {
                                 <a asp-action="Index" asp-route-categoria="@servicio.Slug"
-                                   class="btn btn-primary text-uppercase px-4 py-2 btn-efecto-producto">
-                                    <span class="text-center w-100 d-inline-block"><i class="fa-solid fa-bag-shopping me-2"></i>Galería de Productos</span>
+                                   class="btn btn-primary text-uppercase px-4 py-2 btn-efecto-producto filtro-externo">
+                                    <span class="text-center w-100 d-inline-block">
+                                        <i class="fa-solid fa-bag-shopping me-2"></i>Galería de Productos
+                                    </span>
                                 </a>
                             }
                             else
                             {
                                 <a asp-action="Index" asp-route-categoria="@servicio.Slug"
-                                   class="btn btn-primary text-uppercase px-4 py-2">
+                                   class="btn btn-primary text-uppercase px-4 py-2 filtro-externo">
                                     Ver trabajos
                                 </a>
                             }
@@ -143,7 +182,8 @@
 
 @section Estilos {
     <style>
-        /* Fondo sutilmente diferenciado para la tarjeta de Productos manteniendo los efectos y el botón sólido */
+        /* Fondo sutilmente diferenciado para la tarjeta de Productos,
+           manteniendo los efectos y el botón sólido. */
         .service-item-producto {
             background-color: #faf9f6;
             transition: all 0.3s ease;
@@ -168,4 +208,3 @@
 @section Scripts {
     <script src="~/js/galeria.js" asp-append-version="true"></script>
 }
-```[cite: 1]

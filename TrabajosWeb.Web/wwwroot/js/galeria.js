@@ -1,18 +1,34 @@
 ﻿// Filtro de la galería sin recargar la página.
-// Intercepta los clics en los filtros, pide el HTML de la grilla al servidor
-// y lo reemplaza con una transición. La URL se actualiza igual, así que el
-// botón "atrás" y compartir el enlace siguen funcionando.
+// Intercepta los clics en los filtros y en los botones "Ver trabajos" de la
+// sección Servicios, pide el HTML de la grilla al servidor y lo reemplaza con
+// una transición. La URL se actualiza igual, así que el botón "atrás" y
+// compartir el enlace siguen funcionando.
 (function () {
     var contenedor = document.getElementById('galeria-contenido');
     if (!contenedor) return;
 
     var cargando = false;
 
-    function pedir(url, empujarHistorial) {
+    function irALaGaleria(siempre) {
+        var seccion = document.getElementById('galeria');
+        if (!seccion) return;
+
+        var y = seccion.getBoundingClientRect().top + window.pageYOffset - 90;
+
+        // Al filtrar desde arriba bajamos siempre; desde la grilla, solo si
+        // el encabezado quedó fuera de la vista.
+        if (siempre || window.pageYOffset > y) {
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }
+
+    function pedir(url, empujarHistorial, bajarSiempre) {
         if (cargando) return;
         cargando = true;
 
         contenedor.classList.add('cargando');
+
+        if (bajarSiempre) irALaGaleria(true);
 
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) {
@@ -26,12 +42,7 @@
 
                 if (empujarHistorial) history.pushState({ galeria: true }, '', url);
 
-                // Dejamos el encabezado de la galería a la vista, sin saltos bruscos.
-                var seccion = document.getElementById('galeria');
-                if (seccion) {
-                    var y = seccion.getBoundingClientRect().top + window.pageYOffset - 90;
-                    if (window.pageYOffset > y) window.scrollTo({ top: y, behavior: 'smooth' });
-                }
+                if (!bajarSiempre) irALaGaleria(false);
 
                 cargando = false;
             })
@@ -46,19 +57,24 @@
     function conectarFiltros() {
         contenedor.querySelectorAll('.filtro').forEach(function (a) {
             a.addEventListener('click', function (e) {
-                if (a.classList.contains('activo')) {
-                    e.preventDefault();
-                    return;
-                }
-
                 e.preventDefault();
-                pedir(a.href, true);
+                if (a.classList.contains('activo')) return;
+                pedir(a.href, true, false);
             });
         });
     }
 
+    // Los botones de la sección Servicios están fuera del contenedor,
+    // así que se conectan una sola vez.
+    document.querySelectorAll('.filtro-externo').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            pedir(a.href, true, true);
+        });
+    });
+
     window.addEventListener('popstate', function () {
-        pedir(window.location.href, false);
+        pedir(window.location.href, false, false);
     });
 
     conectarFiltros();
