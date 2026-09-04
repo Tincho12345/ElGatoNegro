@@ -91,21 +91,34 @@
                         ? servicio.Descripcion
                         : servicio.TextoServicio;
 
+                    var esProducto = string.Equals(servicio.Nombre?.Trim(), "Productos", StringComparison.OrdinalIgnoreCase);
+
                     <div class="col-lg-4 col-md-6 wow fadeIn" data-wow-delay="@demoras[i % 3]">
-                        <div class="service-item border h-100 p-5 text-center">
+                        <div class="service-item border h-100 p-5 text-center @(esProducto ? "service-item-producto" : "")">
                             @if (!string.IsNullOrWhiteSpace(servicio.Icono))
                             {
-                                <i class="@servicio.Icono fa-3x text-primary mb-4"></i>
+                                <i class="@servicio.Icono fa-3x text-primary mb-4 @(esProducto ? "fa-bounce" : "")" style="--fa-animation-duration: 3s;"></i>
                             }
                             <h4 class="mb-3">@servicio.Nombre</h4>
                             @if (!string.IsNullOrWhiteSpace(texto))
                             {
                                 <p class="mb-4">@texto</p>
                             }
-                            <a asp-action="Index" asp-route-categoria="@servicio.Slug"
-                               class="btn btn-primary text-uppercase px-4 py-2">
-                                Ver trabajos
-                            </a>
+
+                            @if (esProducto)
+                            {
+                                <a asp-action="Index" asp-route-categoria="@servicio.Slug"
+                                   class="btn btn-primary text-uppercase px-4 py-2 btn-efecto-producto">
+                                    <span class="text-center w-100 d-inline-block"><i class="fa-solid fa-bag-shopping me-2"></i>Galería de Productos</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="Index" asp-route-categoria="@servicio.Slug"
+                                   class="btn btn-primary text-uppercase px-4 py-2">
+                                    Ver trabajos
+                                </a>
+                            }
                         </div>
                     </div>
                 }
@@ -128,6 +141,31 @@
     </div>
 </div>
 
+@section Estilos {
+    <style>
+        /* Fondo sutilmente diferenciado para la tarjeta de Productos manteniendo los efectos y el botón sólido */
+        .service-item-producto {
+            background-color: #faf9f6;
+            transition: all 0.3s ease;
+        }
+
+            .service-item-producto:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.08);
+            }
+
+        .btn-efecto-producto {
+            transition: all 0.3s ease-in-out;
+        }
+
+            .btn-efecto-producto:hover {
+                transform: scale(1.05);
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            }
+    </style>
+}
+
 @section Scripts {
     <script src="~/js/galeria.js" asp-append-version="true"></script>
 }
+```[cite: 1]
