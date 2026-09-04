@@ -244,3 +244,270 @@
         min-height: auto;
     }
 }
+
+/* ============================================================
+   PEGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   ============================================================ */
+
+/* --- Precios y ofertas sobre la pieza --- */
+
+/* Las marcas de la derecha se apilan: puede haber oferta y videos a la vez. */
+.marcas-derecha {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+    /* Anulamos el posicionamiento propio: ahora lo maneja el contenedor. */
+    .marcas-derecha .marca-video {
+        position: static;
+        top: auto;
+        right: auto;
+    }
+
+.marca-oferta {
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #fff;
+    background: #1e8449;
+}
+
+.pieza-precio {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.precio-actual {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.precio-anterior {
+    font-size: 15px;
+    color: rgba(255, 255, 255, .7);
+    text-decoration: line-through;
+}
+
+.pieza-oferta {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--bs-primary);
+}
+
+/* En las celdas chicas el precio compite con el título: lo achicamos. */
+@media (max-width: 575.98px) {
+    .precio-actual {
+        font-size: 19px;
+    }
+
+    .marca-oferta {
+        font-size: 12px;
+        padding: 4px 9px;
+    }
+}
+
+/* ============================================================
+   PEGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   ============================================================ */
+
+/* --- Precios y ofertas sobre la pieza --- */
+
+/* Las marcas de la derecha se apilan: puede haber oferta y videos a la vez. */
+.marcas-derecha {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+    /* Anulamos el posicionamiento propio: ahora lo maneja el contenedor. */
+    .marcas-derecha .marca-video {
+        position: static;
+        top: auto;
+        right: auto;
+    }
+
+.marca-oferta {
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #fff;
+    background: #1e8449;
+}
+
+.pieza-precio {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.precio-actual {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.precio-anterior {
+    font-size: 15px;
+    color: rgba(255, 255, 255, .7);
+    text-decoration: line-through;
+}
+
+.pieza-oferta {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--bs-primary);
+}
+
+@media (max-width: 575.98px) {
+    .precio-actual {
+        font-size: 19px;
+    }
+
+    .marca-oferta {
+        font-size: 12px;
+        padding: 4px 9px;
+    }
+}
+
+
+/* --- Filtro de la galería sin recarga --- */
+
+/* Entrada escalonada de cada pieza. Reemplaza a wow, que no vuelve a
+   aplicarse sobre el contenido insertado por fetch. */
+@keyframes entraPieza {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.entra {
+    animation: entraPieza .45s ease both;
+}
+
+/* Mientras llega la respuesta, el bloque se atenúa y no acepta clics. */
+#galeria-contenido {
+    position: relative;
+    transition: opacity .2s;
+}
+
+    #galeria-contenido.cargando {
+        opacity: .35;
+        pointer-events: none;
+    }
+
+        #galeria-contenido.cargando::after {
+            content: "";
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            width: 42px;
+            height: 42px;
+            margin-left: -21px;
+            border: 3px solid rgba(0, 0, 0, .12);
+            border-top-color: var(--bs-primary);
+            border-radius: 50%;
+            animation: giraFiltro .7s linear infinite;
+        }
+
+@keyframes giraFiltro {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Quien prefiera menos movimiento, no lo tiene. */
+@media (prefers-reduced-motion: reduce) {
+    .entra {
+        animation: none;
+    }
+}
+
+
+/* --- Ficha de datos del detalle --- */
+.ficha {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    padding: 18px 0;
+    border-top: 1px solid rgba(0, 0, 0, .08);
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+}
+
+.ficha-dato {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--bs-dark);
+}
+
+    .ficha-dato i {
+        color: var(--bs-primary);
+    }
+
+    .ficha-dato.destacado {
+        color: var(--bs-primary);
+    }
+
+
+/* --- Precio en el panel lateral del detalle --- */
+.precio-panel {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.precio-panel-actual {
+    font-family: "Playfair Display", serif;
+    font-size: 34px;
+    font-weight: 500;
+    color: var(--bs-dark);
+    line-height: 1.1;
+}
+
+.precio-panel-anterior {
+    font-size: 18px;
+    color: rgba(0, 0, 0, .45);
+    text-decoration: line-through;
+}
+
+.precio-panel-nota {
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-size: 14px;
+    color: #1e8449;
+}

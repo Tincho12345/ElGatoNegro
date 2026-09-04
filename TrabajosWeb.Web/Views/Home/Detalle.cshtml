@@ -9,7 +9,10 @@
     var linkConsulta = $"https://wa.me/{Model.Contacto.WhatsAppNumero}?text={Uri.EscapeDataString(mensaje)}";
 
     var medios = trabajo.Medios.OrderBy(m => m.Orden).ToList();
+    var fotos = medios.Count(m => m.Tipo == TipoMedia.Imagen);
+    var videos = medios.Count(m => m.Tipo == TipoMedia.Video);
     var grupo = $"trabajo-{trabajo.Id}";
+    var etiqueta = trabajo.EtiquetaCalculada;
 }
 
 <div class="container-fluid bg-light page-header py-5 mb-5">
@@ -36,19 +39,47 @@
             <div class="col-lg-8">
                 @if (!string.IsNullOrWhiteSpace(trabajo.Descripcion))
                 {
-                    <p class="fs-5 mb-5 wow fadeIn" data-wow-delay="0.1s">@trabajo.Descripcion</p>
+                    <p class="fs-5 mb-4 wow fadeIn" data-wow-delay="0.1s">@trabajo.Descripcion</p>
                 }
+
+                <div class="ficha wow fadeIn" data-wow-delay="0.2s">
+                    <div class="ficha-dato">
+                        <i class="fa-solid fa-tag"></i>
+                        <span>@trabajo.CategoriaNombre</span>
+                    </div>
+                    @if (fotos > 0)
+                    {
+                        <div class="ficha-dato">
+                            <i class="fa-regular fa-images"></i>
+                            <span>@fotos @(fotos == 1 ? "foto" : "fotos")</span>
+                        </div>
+                    }
+                    @if (videos > 0)
+                    {
+                        <div class="ficha-dato">
+                            <i class="fa-solid fa-play"></i>
+                            <span>@videos @(videos == 1 ? "video" : "videos")</span>
+                        </div>
+                    }
+                    @if (trabajo.Destacado)
+                    {
+                        <div class="ficha-dato destacado">
+                            <i class="fa-solid fa-star"></i>
+                            <span>Destacado</span>
+                        </div>
+                    }
+                </div>
 
                 @if (!medios.Any())
                 {
                     <div class="galeria-vacia wow fadeIn" data-wow-delay="0.2s">
-                        <i class="far fa-images d-block"></i>
+                        <i class="fa-regular fa-images d-block"></i>
                         <p class="fs-5 mb-0">Este trabajo todavía no tiene fotos ni videos.</p>
                     </div>
                 }
                 else
                 {
-                    <div class="row g-4">
+                    <div class="row g-4 mt-2">
                         @foreach (var media in medios)
                         {
                             var url = Model.ApiBaseUrl + media.Url;
@@ -60,8 +91,9 @@
                                         <img src="@url" class="img-fluid w-100"
                                              alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
                                         <div class="gallery-icon">
-                                            <a href="@url" class="btn btn-primary btn-lg-square" data-lightbox="@grupo">
-                                                <i class="fa fa-eye"></i>
+                                            <a href="@url" class="btn btn-primary btn-lg-square" data-lightbox="@grupo"
+                                               data-title="@trabajo.Titulo">
+                                                <i class="fa-solid fa-expand"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -79,12 +111,40 @@
                 }
 
                 <a asp-action="Index" class="btn btn-primary text-uppercase px-5 py-3 mt-5">
-                    <i class="fa fa-arrow-left me-2"></i>Volver a los trabajos
+                    <i class="fa-solid fa-arrow-left me-2"></i>Volver a los trabajos
                 </a>
             </div>
 
             <div class="col-lg-4">
                 <div class="bg-light p-5 panel-consulta wow fadeIn" data-wow-delay="0.3s">
+                    @if (!string.IsNullOrWhiteSpace(etiqueta))
+                    {
+                        <span class="marca-oferta d-inline-block mb-3">@etiqueta</span>
+                    }
+
+                    @if (trabajo.Precio.HasValue)
+                    {
+                        <div class="precio-panel">
+                            @if (trabajo.PrecioAnterior > trabajo.Precio)
+                            {
+                                <span class="precio-panel-anterior">@trabajo.PrecioAnterior!.Value.ToString("C0")</span>
+                            }
+                            <span class="precio-panel-actual">@trabajo.Precio.Value.ToString("C0")</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(trabajo.TextoOferta))
+                        {
+                            <p class="precio-panel-nota">@trabajo.TextoOferta</p>
+                        }
+
+                        <hr class="my-4" style="opacity:.15;" />
+                    }
+                    else if (!string.IsNullOrWhiteSpace(trabajo.TextoOferta))
+                    {
+                        <p class="precio-panel-nota">@trabajo.TextoOferta</p>
+                        <hr class="my-4" style="opacity:.15;" />
+                    }
+
                     <h1 class="font-dancing-script text-primary">Consultanos</h1>
                     <h3 class="mb-4">¿Querés algo así?</h3>
                     <p class="mb-4">
@@ -93,14 +153,61 @@
 
                     <a href="@linkConsulta" target="_blank" rel="noopener"
                        class="btn btn-primary text-uppercase w-100 py-3 mb-3 mx-0">
-                        <i class="fab fa-whatsapp me-2"></i>Consultar por WhatsApp
+                        <i class="fa-brands fa-whatsapp me-2"></i>Consultar por WhatsApp
                     </a>
 
                     <a asp-action="Contacto" class="btn btn-dark text-uppercase w-100 py-3 mx-0">
-                        <i class="fa fa-envelope me-2"></i>Enviar un mensaje
+                        <i class="fa-solid fa-envelope me-2"></i>Enviar un mensaje
                     </a>
                 </div>
             </div>
         </div>
+
+        @if (Model.Relacionados.Any())
+        {
+            <div class="mt-5 pt-5">
+                <div class="text-center wow fadeIn" data-wow-delay="0.1s">
+                    <h1 class="font-dancing-script text-primary">También te puede gustar</h1>
+                    <h1 class="mb-5">Más de @trabajo.CategoriaNombre</h1>
+                </div>
+
+                <div class="row g-0">
+                    @foreach (var otro in Model.Relacionados)
+                    {
+                        var portadaOtro = otro.Medios
+                            .OrderBy(m => m.Orden)
+                            .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+
+                        <div class="col-md-4 wow fadeIn" data-wow-delay="0.2s">
+                            <a asp-action="Detalle" asp-route-id="@otro.Id" class="gallery-item d-block">
+                                @if (portadaOtro is not null)
+                                {
+                                    <img src="@(Model.ApiBaseUrl + portadaOtro.Url)"
+                                         alt="@otro.Titulo" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <div class="pieza-vacia"><i class="fa-solid fa-scissors"></i></div>
+                                }
+
+                                <div class="gallery-icon">
+                                    <span class="btn btn-primary btn-lg-square"><i class="fa-solid fa-eye"></i></span>
+                                </div>
+
+                                <div class="pieza-pie">
+                                    <h3 class="pieza-titulo">@otro.Titulo</h3>
+                                    @if (otro.Precio.HasValue)
+                                    {
+                                        <div class="pieza-precio">
+                                            <span class="precio-actual">@otro.Precio.Value.ToString("C0")</span>
+                                        </div>
+                                    }
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </div>

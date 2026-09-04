@@ -1,0 +1,117 @@
+﻿@using TrabajosWeb.Shared.DTOs
+@model TrabajosWeb.Web.Models.GaleriaViewModel
+@{
+    // Patrón de Salone: 6-3-3 / 3-3-6, repetido cada seis piezas.
+    var anchos = new[] { "col-md-6", "col-md-3", "col-md-3", "col-md-3", "col-md-3", "col-md-6" };
+}
+
+@if (Model.Categorias.Any())
+{
+    <nav class="filtros" aria-label="Filtrar por tipo de trabajo">
+        <a asp-action="Index"
+           class="filtro @(string.IsNullOrEmpty(Model.CategoriaActual) ? "activo" : null)">
+            Todo
+        </a>
+        @foreach (var categoria in Model.Categorias)
+        {
+            <a asp-action="Index" asp-route-categoria="@categoria.Slug"
+               class="filtro @(Model.CategoriaActual == categoria.Slug ? "activo" : null)">
+                @if (!string.IsNullOrWhiteSpace(categoria.Icono))
+                {
+                    <i class="@categoria.Icono"></i>
+                }
+                @categoria.Nombre
+            </a>
+        }
+    </nav>
+}
+
+@if (!Model.Trabajos.Any())
+{
+    <div class="galeria-vacia entra">
+        <i class="fa-regular fa-images d-block"></i>
+        <p class="fs-5">
+            @(string.IsNullOrEmpty(Model.CategoriaActual)
+                ? "Todavía no hay trabajos publicados."
+                : "No hay trabajos en esta categoría por ahora.")
+        </p>
+        <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
+           class="btn btn-primary text-uppercase px-5 py-3">
+            <i class="fa-brands fa-whatsapp me-2"></i>Consultanos
+        </a>
+    </div>
+}
+else
+{
+    <div class="row g-0">
+        @for (var i = 0; i < Model.Trabajos.Count; i++)
+        {
+            var trabajo = Model.Trabajos[i];
+
+            var portada = trabajo.Medios
+                .OrderBy(m => m.Orden)
+                .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+
+            var videos = trabajo.Medios.Count(m => m.Tipo == TipoMedia.Video);
+            var etiqueta = trabajo.EtiquetaCalculada;
+
+            <div class="@anchos[i % 6] entra" style="animation-delay:@(i * 60)ms;">
+                <a asp-action="Detalle" asp-route-id="@trabajo.Id" class="gallery-item d-block">
+                    @if (portada is not null)
+                    {
+                        <img src="@(Model.ApiBaseUrl + portada.Url)"
+                             alt="@(portada.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="pieza-vacia"><i class="fa-solid fa-scissors"></i></div>
+                    }
+
+                    @if (trabajo.Destacado)
+                    {
+                        <span class="marca-destacado">Destacado</span>
+                    }
+
+                    @if (videos > 0 || !string.IsNullOrWhiteSpace(etiqueta))
+                    {
+                        <div class="marcas-derecha">
+                            @if (!string.IsNullOrWhiteSpace(etiqueta))
+                            {
+                                <span class="marca-oferta">@etiqueta</span>
+                            }
+                            @if (videos > 0)
+                            {
+                                <span class="marca-video"><i class="fa-solid fa-play"></i>@videos</span>
+                            }
+                        </div>
+                    }
+
+                    <div class="gallery-icon">
+                        <span class="btn btn-primary btn-lg-square"><i class="fa-solid fa-eye"></i></span>
+                    </div>
+
+                    <div class="pieza-pie">
+                        <h3 class="pieza-titulo">@trabajo.Titulo</h3>
+                        <span class="pieza-categoria">@trabajo.CategoriaNombre</span>
+
+                        @if (trabajo.Precio.HasValue)
+                        {
+                            <div class="pieza-precio">
+                                @if (trabajo.PrecioAnterior > trabajo.Precio)
+                                {
+                                    <span class="precio-anterior">@trabajo.PrecioAnterior!.Value.ToString("C0")</span>
+                                }
+                                <span class="precio-actual">@trabajo.Precio.Value.ToString("C0")</span>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(trabajo.TextoOferta))
+                        {
+                            <span class="pieza-oferta">@trabajo.TextoOferta</span>
+                        }
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}
