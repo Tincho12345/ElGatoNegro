@@ -38,6 +38,11 @@ builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
     client.Timeout = TimeSpan.FromMinutes(5); // las subidas de video tardan
 });
 
+// ---------- Datos del sitio ----------
+// Los pide cada página, así que van cacheados unos minutos.
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IAjustesService, AjustesService>();
+
 // ---------- Autenticación por cookie ----------
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

@@ -1,0 +1,157 @@
+﻿@model TrabajosWeb.Web.Models.AjustesFormViewModel
+@{
+    ViewData["Title"] = "Datos del sitio";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>Datos del sitio</h1>
+        <a asp-action="Index" class="boton boton-claro">
+            <i class="fa-solid fa-arrow-left"></i>Volver al panel
+        </a>
+    </div>
+
+    <div class="vidrio" style="padding:32px;max-width:720px;">
+        <form asp-action="GuardarAjustes" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <h3 style="font-size:1.05rem;">Identidad</h3>
+            <p class="ayuda chico" style="margin-bottom:20px;">
+                Lo que se ve en la portada y en el pie de la web.
+            </p>
+
+            <div class="campo">
+                <label asp-for="Ajustes.NombreSitio">Nombre</label>
+                <input asp-for="Ajustes.NombreSitio" class="entrada" placeholder="El Gato Negro" autofocus />
+                <span asp-validation-for="Ajustes.NombreSitio"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Saludo">
+                    Saludo <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.Saludo" class="entrada" placeholder="Bienvenida" />
+                <span class="ayuda chico">Frase corta que aparece arriba del nombre, en cursiva.</span>
+                <span asp-validation-for="Ajustes.Saludo"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.TextoBienvenida">
+                    Texto de presentación <span class="ayuda">(opcional)</span>
+                </label>
+                <textarea asp-for="Ajustes.TextoBienvenida" class="entrada" rows="3"
+                          placeholder="Cortes, color, brushing y tratamientos."></textarea>
+                <span asp-validation-for="Ajustes.TextoBienvenida"></span>
+            </div>
+
+            <hr style="margin:28px 0;opacity:.15;" />
+
+            <h3 style="font-size:1.05rem;">Contacto</h3>
+            <p class="ayuda chico" style="margin-bottom:20px;">
+                Lo que dejes vacío no se muestra en la web.
+            </p>
+
+            <div class="campo">
+                <label asp-for="Ajustes.WhatsAppNumero">
+                    WhatsApp <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.WhatsAppNumero" class="entrada" style="max-width:280px;"
+                       placeholder="5493751591536" inputmode="numeric" />
+                <span class="ayuda chico">
+                    Solo números, con código de país y sin el 15. Para Misiones: 549 + 3751 + número.
+                </span>
+                <span asp-validation-for="Ajustes.WhatsAppNumero"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.MensajeWhatsApp">
+                    Mensaje inicial <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.MensajeWhatsApp" class="entrada"
+                       placeholder="Hola, vi sus trabajos en la web y quisiera consultar." />
+                <span class="ayuda chico">Texto con el que se abre el chat cuando alguien toca el botón.</span>
+                <span asp-validation-for="Ajustes.MensajeWhatsApp"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Email">
+                    Correo <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.Email" class="entrada" type="email"
+                       placeholder="contacto@gatonegro.org" />
+                <span asp-validation-for="Ajustes.Email"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Telefono">
+                    Teléfono <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.Telefono" class="entrada" style="max-width:280px;"
+                       placeholder="3751 591536" />
+                <span asp-validation-for="Ajustes.Telefono"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Direccion">
+                    Dirección <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.Direccion" class="entrada"
+                       placeholder="Av. San Martín 1234, Eldorado" />
+                <span asp-validation-for="Ajustes.Direccion"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Horarios">
+                    Horarios <span class="ayuda">(opcional)</span>
+                </label>
+                <textarea asp-for="Ajustes.Horarios" class="entrada" rows="2"
+                          placeholder="Lunes a viernes de 9 a 19. Sábados de 9 a 14."></textarea>
+                <span asp-validation-for="Ajustes.Horarios"></span>
+            </div>
+
+            <hr style="margin:28px 0;opacity:.15;" />
+
+            <h3 style="font-size:1.05rem;">Redes</h3>
+            <p class="ayuda chico" style="margin-bottom:20px;">
+                Dirección completa del perfil, con https://. El botón aparece solo si cargás la red.
+            </p>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Facebook">
+                    Facebook <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.Facebook" class="entrada"
+                       placeholder="https://facebook.com/elgatonegro" />
+                <span asp-validation-for="Ajustes.Facebook"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.Instagram">
+                    Instagram <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.Instagram" class="entrada"
+                       placeholder="https://instagram.com/elgatonegro" />
+                <span asp-validation-for="Ajustes.Instagram"></span>
+            </div>
+
+            <div class="campo">
+                <label asp-for="Ajustes.TikTok">
+                    TikTok <span class="ayuda">(opcional)</span>
+                </label>
+                <input asp-for="Ajustes.TikTok" class="entrada"
+                       placeholder="https://tiktok.com/@@elgatonegro" />
+                <span asp-validation-for="Ajustes.TikTok"></span>
+            </div>
+
+            <button type="submit" class="boton boton-primario" style="margin-top:8px;">
+                <i class="fa-solid fa-check"></i>Guardar datos
+            </button>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

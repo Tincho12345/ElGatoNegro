@@ -13,11 +13,16 @@ namespace TrabajosWeb.Web.Controllers;
 public class AdminController : Controller
 {
     private readonly IApiClient _api;
+    private readonly IAjustesService _ajustes;
     private readonly string _apiBaseUrl;
 
-    public AdminController(IApiClient api, IOptions<ApiSettings> apiSettings)
+    public AdminController(
+        IApiClient api,
+        IAjustesService ajustes,
+        IOptions<ApiSettings> apiSettings)
     {
         _api = api;
+        _ajustes = ajustes;
         _apiBaseUrl = apiSettings.Value.BaseUrl.TrimEnd('/');
     }
 
@@ -146,23 +151,6 @@ public class AdminController : Controller
     {
         var (ok, error) = await _api.DeleteAsync($"api/Trabajos/{id}", ct);
 
-        // Desde el panel se llama por fetch: respondemos JSON con los contadores
-        // ya recalculados, para no recargar la pagina.
-        if (EsPeticionAjax())
-        {
-            if (!ok)
-                return Json(new { ok = false, error = error ?? "No se pudo eliminar." });
-
-            var trabajos = await _api.GetAsync<List<TrabajoDto>>("api/Trabajos/admin", ct) ?? new();
-
-            return Json(new
-            {
-                ok = true,
-                total = trabajos.Count,
-                publicados = trabajos.Count(t => t.Publicado)
-            });
-        }
-
         if (ok)
             TempData["Exito"] = "Trabajo eliminado.";
         else
@@ -269,6 +257,61 @@ public class AdminController : Controller
             TempData["Error"] = error ?? "No se pudo eliminar.";
 
         return RedirectToAction(nameof(Categorias));
+    }
+
+    // ---------- Datos del sitio ----------
+
+    [HttpGet]
+    public async Task<IActionResult> Ajustes(CancellationToken ct)
+    {
+        var ajustes = await _api.GetAsync<AjustesSitioDto>("api/Ajustes", ct);
+
+        if (ajustes is null)
+        {
+            TempData["Error"] = "No se pudieron leer los datos del sitio.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View("AjustesForm", new AjustesFormViewModel
+        {
+            Ajustes = new AjustesSitioUpdateDto
+            {
+                NombreSitio = ajustes.NombreSitio,
+                Saludo = ajustes.Saludo,
+                TextoBienvenida = ajustes.TextoBienvenida,
+                WhatsAppNumero = ajustes.WhatsAppNumero,
+                MensajeWhatsApp = ajustes.MensajeWhatsApp,
+                Email = ajustes.Email,
+                Telefono = ajustes.Telefono,
+                Direccion = ajustes.Direccion,
+                Horarios = ajustes.Horarios,
+                Facebook = ajustes.Facebook,
+                Instagram = ajustes.Instagram,
+                TikTok = ajustes.TikTok
+            }
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarAjustes(AjustesFormViewModel modelo, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+            return View("AjustesForm", modelo);
+
+        var (ok, error) = await _api.PutAsync("api/Ajustes", modelo.Ajustes, ct);
+
+        if (!ok)
+        {
+            ModelState.AddModelError(string.Empty, error ?? "No se pudieron guardar los datos.");
+            return View("AjustesForm", modelo);
+        }
+
+        // El layout los tiene cacheados: hay que soltarlos para que se vean ya.
+        _ajustes.Invalidar();
+
+        TempData["Exito"] = "Datos del sitio actualizados.";
+        return RedirectToAction(nameof(Ajustes));
     }
 
     // ---------- Consultas ----------

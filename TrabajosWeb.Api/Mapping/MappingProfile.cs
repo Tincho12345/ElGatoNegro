@@ -28,5 +28,8 @@ public class MappingProfile : Profile
         // El slug lo calcula el controller, no se mapea
         CreateMap<CategoriaCreateDto, Categoria>()
             .ForMember(d => d.Slug, o => o.Ignore());
+
+        CreateMap<AjustesSitio, AjustesSitioDto>();
+        CreateMap<AjustesSitioUpdateDto, AjustesSitio>();
     }
 }

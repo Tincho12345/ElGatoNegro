@@ -22,6 +22,8 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<AjustesSitio> AjustesSitio => Set<AjustesSitio>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

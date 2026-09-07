@@ -990,3 +990,233 @@
         transform: none;
     }
 }
+
+/* ============================================================
+   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   ============================================================ */
+
+/* --- Vista tienda: categoría Productos --- */
+.tienda {
+    padding: 40px 28px;
+    border-radius: 20px;
+    background: linear-gradient(160deg, #fdf4f2 0%, #fbeeec 100%);
+}
+
+.producto-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, .05);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .05);
+    transition: box-shadow .35s, transform .35s;
+}
+
+    .producto-card:hover {
+        box-shadow: 0 16px 38px rgba(0, 0, 0, .13);
+        transform: translateY(-5px);
+    }
+
+.producto-foto {
+    position: relative;
+    height: 230px;
+    background: #faf7f6;
+    overflow: hidden;
+}
+
+    .producto-foto img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .6s ease;
+    }
+
+.producto-card:hover .producto-foto img {
+    transform: scale(1.07);
+}
+
+.producto-sin-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 46px;
+    color: var(--bs-primary);
+    opacity: .35;
+}
+
+.producto-destacado {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 13px;
+    color: var(--bs-dark);
+    background: var(--bs-primary);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
+}
+
+.producto-cuerpo {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: 20px 20px 22px;
+}
+
+.producto-titulo {
+    margin: 0 0 12px;
+    font-family: "Work Sans", sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--bs-dark);
+}
+
+.producto-linea-oferta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-bottom: 4px;
+}
+
+.producto-off {
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: #fff;
+    background: #c2708a;
+}
+
+.producto-antes {
+    font-size: 14px;
+    color: rgba(0, 0, 0, .4);
+    text-decoration: line-through;
+}
+
+.producto-precio {
+    font-family: "Playfair Display", serif;
+    font-size: 27px;
+    font-weight: 500;
+    line-height: 1.1;
+    color: var(--bs-dark);
+}
+
+.producto-nota {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #b05a77;
+}
+
+.producto-vermas {
+    margin-top: auto;
+    padding-top: 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--bs-primary);
+    transition: .3s;
+}
+
+    .producto-vermas i {
+        margin-left: 6px;
+        transition: .3s;
+    }
+
+.producto-card:hover .producto-vermas i {
+    transform: translateX(5px);
+}
+
+@media (max-width: 767.98px) {
+    .tienda {
+        padding: 26px 14px;
+        border-radius: 14px;
+    }
+
+    .producto-foto {
+        height: 185px;
+    }
+
+    .producto-precio {
+        font-size: 23px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .producto-card,
+    .producto-foto img,
+    .producto-vermas i {
+        transition: none;
+    }
+}
+
+/* ============================================================
+   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   Va después de todo lo anterior: al cargarse último, gana.
+   ============================================================ */
+
+/* --- Fondo suave para la sección Servicios --- */
+
+/* La franja completa toma un crema apenas rosado, para que las tarjetas
+   no floten sobre blanco. */
+.service {
+    background: linear-gradient(180deg, #fdfaf7 0%, #fbf5f2 100%);
+}
+
+    .service .service-item {
+        background: linear-gradient(160deg, #ffffff 0%, #fdf8f5 100%);
+        border-color: rgba(194, 161, 113, .22) !important;
+        box-shadow: 0 4px 18px rgba(120, 90, 70, .06);
+    }
+
+        .service .service-item:hover {
+            background: linear-gradient(160deg, #ffffff 0%, #fbf1ec 100%);
+            border-color: rgba(194, 161, 113, .45) !important;
+            box-shadow: 0 16px 38px rgba(120, 90, 70, .14);
+        }
+
+        /* La tarjeta de Productos, un punto más cálida que el resto.
+   La especificidad de estos selectores gana sobre el bloque de la vista. */
+        .service .service-item.service-item-producto {
+            background: linear-gradient(160deg, #fdf6f3 0%, #faeee9 100%);
+        }
+
+            .service .service-item.service-item-producto:hover {
+                background: linear-gradient(160deg, #fdf6f3 0%, #f7e5df 100%);
+            }
+
+        /* El ícono queda sobre un círculo suave, así no flota solo. */
+        .service .service-item > i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(194, 161, 113, .12);
+            transition: background .4s, transform .4s;
+        }
+
+        .service .service-item:hover > i {
+            background: rgba(194, 161, 113, .22);
+            transform: translateY(-3px);
+        }
+
+@media (prefers-reduced-motion: reduce) {
+    .service .service-item,
+    .service .service-item > i {
+        transition: none;
+    }
+}

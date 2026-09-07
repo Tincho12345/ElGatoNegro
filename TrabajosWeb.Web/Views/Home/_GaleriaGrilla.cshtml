@@ -3,6 +3,14 @@
 @{
     // Patrón de Salone: 6-3-3 / 3-3-6, repetido cada seis piezas.
     var anchos = new[] { "col-md-6", "col-md-3", "col-md-3", "col-md-3", "col-md-3", "col-md-6" };
+
+    // La categoría "Productos" se muestra como tienda, no como galería.
+    var slugProductos = Model.Categorias
+        .FirstOrDefault(c => string.Equals(c.Nombre?.Trim(), "Productos", StringComparison.OrdinalIgnoreCase))
+        ?.Slug;
+
+    var esTienda = !string.IsNullOrWhiteSpace(Model.CategoriaActual)
+        && Model.CategoriaActual == slugProductos;
 }
 
 @if (Model.Categorias.Any())
@@ -41,9 +49,77 @@
         </a>
     </div>
 }
+else if (esTienda)
+{
+    <div class="tienda">
+        <div class="row g-4">
+            @for (var i = 0; i < Model.Trabajos.Count; i++)
+            {
+                var producto = Model.Trabajos[i];
+
+                var portada = producto.Medios
+                    .OrderBy(m => m.Orden)
+                    .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+
+                var etiqueta = producto.EtiquetaCalculada;
+
+                <div class="col-lg-3 col-md-4 col-sm-6 entra" style="animation-delay:@(i * 60)ms;">
+                    <a asp-action="Detalle" asp-route-id="@producto.Id" class="producto-card h-100">
+                        <div class="producto-foto">
+                            @if (portada is not null)
+                            {
+                                <img src="@(Model.ApiBaseUrl + portada.Url)"
+                                     alt="@(portada.TextoAlternativo ?? producto.Titulo)" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="producto-sin-foto"><i class="fa-solid fa-bottle-droplet"></i></div>
+                            }
+
+                            @if (producto.Destacado)
+                            {
+                                <span class="producto-destacado"><i class="fa-solid fa-star"></i></span>
+                            }
+                        </div>
+
+                        <div class="producto-cuerpo">
+                            <h3 class="producto-titulo">@producto.Titulo</h3>
+
+                            @if (producto.PrecioAnterior > producto.Precio || !string.IsNullOrWhiteSpace(etiqueta))
+                            {
+                                <div class="producto-linea-oferta">
+                                    @if (!string.IsNullOrWhiteSpace(etiqueta))
+                                    {
+                                        <span class="producto-off">@etiqueta</span>
+                                    }
+                                    @if (producto.PrecioAnterior > producto.Precio)
+                                    {
+                                        <span class="producto-antes">@producto.PrecioAnterior!.Value.ToString("C0")</span>
+                                    }
+                                </div>
+                            }
+
+                            @if (producto.Precio.HasValue)
+                            {
+                                <div class="producto-precio">@producto.Precio.Value.ToString("C0")</div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(producto.TextoOferta))
+                            {
+                                <span class="producto-nota">@producto.TextoOferta</span>
+                            }
+
+                            <span class="producto-vermas">Ver más <i class="fa-solid fa-arrow-right"></i></span>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}
 else
 {
-    <div class="row g-0">
+    <div class="row g-4">
         @for (var i = 0; i < Model.Trabajos.Count; i++)
         {
             var trabajo = Model.Trabajos[i];

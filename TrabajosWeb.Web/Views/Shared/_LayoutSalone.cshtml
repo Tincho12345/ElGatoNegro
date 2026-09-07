@@ -1,8 +1,7 @@
-﻿@using Microsoft.Extensions.Options
-@using TrabajosWeb.Web.Configuration
-@inject IOptions<ContactoSettings> ContactoOpt
+﻿@using TrabajosWeb.Web.Services
+@inject IAjustesService AjustesSrv
 @{
-    var contacto = ContactoOpt.Value;
+    var sitio = await AjustesSrv.ObtenerAsync();
     var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
     var accion = ViewContext.RouteData.Values["action"]?.ToString();
 }
@@ -11,8 +10,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] · El Gato Negro</title>
-    <meta name="description" content="Peluquería El Gato Negro. Cortes, color, brushing y tratamientos." />
+    <title>@ViewData["Title"] · @sitio.NombreSitio</title>
+    <meta name="description" content="@(sitio.TextoBienvenida ?? "Peluquería. Cortes, color, brushing y tratamientos.")" />
     <link rel="icon" href="~/favicon.ico" />
     <link rel="icon" type="image/png" href="~/img/gato-negro.png" />
 
@@ -47,7 +46,7 @@
         <nav class="navbar navbar-expand-lg navbar-light p-0">
             <a asp-controller="Home" asp-action="Index" class="navbar-brand bg-primary py-4 px-5 me-0">
                 <h1 class="mb-0 d-flex align-items-center">
-                    <img src="~/img/gato-negro.png" alt="" class="logo-gato me-2" />El Gato Negro
+                    <img src="~/img/gato-negro.png" alt="" class="logo-gato me-2" />@sitio.NombreSitio
                 </h1>
             </a>
             <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -78,24 +77,34 @@
                             <button type="submit" class="btn btn-sm btn-primary text-uppercase">Cerrar sesión</button>
                         </form>
                     }
-                    @if (!string.IsNullOrWhiteSpace(contacto.Facebook))
+                    @if (!string.IsNullOrWhiteSpace(sitio.Facebook))
                     {
-                        <a class="btn btn-primary btn-sm-square me-3" href="@contacto.Facebook"
+                        <a class="btn btn-primary btn-sm-square me-3" href="@sitio.Facebook"
                            target="_blank" rel="noopener" aria-label="Facebook">
                             <i class="fa-brands fa-facebook-f"></i>
                         </a>
                     }
-                    @if (!string.IsNullOrWhiteSpace(contacto.Instagram))
+                    @if (!string.IsNullOrWhiteSpace(sitio.Instagram))
                     {
-                        <a class="btn btn-primary btn-sm-square me-3" href="@contacto.Instagram"
+                        <a class="btn btn-primary btn-sm-square me-3" href="@sitio.Instagram"
                            target="_blank" rel="noopener" aria-label="Instagram">
                             <i class="fa-brands fa-instagram"></i>
                         </a>
                     }
-                    <a class="btn btn-primary btn-sm-square" href="@contacto.LinkWhatsApp"
-                       target="_blank" rel="noopener" aria-label="WhatsApp">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </a>
+                    @if (!string.IsNullOrWhiteSpace(sitio.TikTok))
+                    {
+                        <a class="btn btn-primary btn-sm-square me-3" href="@sitio.TikTok"
+                           target="_blank" rel="noopener" aria-label="TikTok">
+                            <i class="fa-brands fa-tiktok"></i>
+                        </a>
+                    }
+                    @if (sitio.TieneWhatsApp)
+                    {
+                        <a class="btn btn-primary btn-sm-square" href="@sitio.LinkWhatsApp"
+                           target="_blank" rel="noopener" aria-label="WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                    }
                 </div>
             </div>
         </nav>
@@ -122,40 +131,68 @@
                 <div class="col-lg-6 pe-lg-5">
                     <a asp-controller="Home" asp-action="Index" class="navbar-brand">
                         <h1 class="display-5 text-primary mb-0 d-flex align-items-center">
-                            <img src="~/img/gato-negro.png" alt="" class="logo-gato logo-gato-pie me-2" />El Gato Negro
+                            <img src="~/img/gato-negro.png" alt="" class="logo-gato logo-gato-pie me-2" />@sitio.NombreSitio
                         </h1>
                     </a>
-                    <p>Cortes, color, brushing y tratamientos. Mirá lo que hicimos y contanos qué tenés en mente.</p>
-                    @if (!string.IsNullOrWhiteSpace(contacto.Email))
+                    @if (!string.IsNullOrWhiteSpace(sitio.TextoBienvenida))
                     {
-                        <p class="mb-2"><i class="fa-solid fa-envelope me-2"></i>@contacto.Email</p>
+                        <p>@sitio.TextoBienvenida</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(sitio.Direccion))
+                    {
+                        <p class="mb-2"><i class="fa-solid fa-location-dot me-2"></i>@sitio.Direccion</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(sitio.Telefono))
+                    {
+                        <p class="mb-2"><i class="fa-solid fa-phone me-2"></i>@sitio.Telefono</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(sitio.Email))
+                    {
+                        <p class="mb-2"><i class="fa-solid fa-envelope me-2"></i>@sitio.Email</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(sitio.Horarios))
+                    {
+                        <p class="mb-2"><i class="fa-regular fa-clock me-2"></i>@sitio.Horarios</p>
                     }
                     <div class="d-flex justify-content-start mt-4">
-                        @if (!string.IsNullOrWhiteSpace(contacto.Facebook))
+                        @if (!string.IsNullOrWhiteSpace(sitio.Facebook))
                         {
-                            <a class="btn btn-sm-square btn-primary me-3" href="@contacto.Facebook"
+                            <a class="btn btn-sm-square btn-primary me-3" href="@sitio.Facebook"
                                target="_blank" rel="noopener" aria-label="Facebook">
                                 <i class="fa-brands fa-facebook-f"></i>
                             </a>
                         }
-                        @if (!string.IsNullOrWhiteSpace(contacto.Instagram))
+                        @if (!string.IsNullOrWhiteSpace(sitio.Instagram))
                         {
-                            <a class="btn btn-sm-square btn-primary me-3" href="@contacto.Instagram"
+                            <a class="btn btn-sm-square btn-primary me-3" href="@sitio.Instagram"
                                target="_blank" rel="noopener" aria-label="Instagram">
                                 <i class="fa-brands fa-instagram"></i>
                             </a>
                         }
-                        <a class="btn btn-sm-square btn-primary me-3" href="@contacto.LinkWhatsApp"
-                           target="_blank" rel="noopener" aria-label="WhatsApp">
-                            <i class="fa-brands fa-whatsapp"></i>
-                        </a>
+                        @if (!string.IsNullOrWhiteSpace(sitio.TikTok))
+                        {
+                            <a class="btn btn-sm-square btn-primary me-3" href="@sitio.TikTok"
+                               target="_blank" rel="noopener" aria-label="TikTok">
+                                <i class="fa-brands fa-tiktok"></i>
+                            </a>
+                        }
+                        @if (sitio.TieneWhatsApp)
+                        {
+                            <a class="btn btn-sm-square btn-primary me-3" href="@sitio.LinkWhatsApp"
+                               target="_blank" rel="noopener" aria-label="WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </a>
+                        }
                     </div>
                 </div>
                 <div class="col-lg-6 ps-lg-5">
                     <h5 class="text-primary mb-4">Navegación</h5>
                     <a class="btn btn-link" asp-controller="Home" asp-action="Index">Trabajos</a>
                     <a class="btn btn-link" asp-controller="Home" asp-action="Contacto">Contacto</a>
-                    <a class="btn btn-link" href="@contacto.LinkWhatsApp" target="_blank" rel="noopener">WhatsApp</a>
+                    @if (sitio.TieneWhatsApp)
+                    {
+                        <a class="btn btn-link" href="@sitio.LinkWhatsApp" target="_blank" rel="noopener">WhatsApp</a>
+                    }
                 </div>
             </div>
         </div>
@@ -166,11 +203,10 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    &copy; @DateTime.Now.Year El Gato Negro
+                    &copy; @DateTime.Now.Year @sitio.NombreSitio
                 </div>
                 <div class="col-md-6 text-center text-md-end">
-                    Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a>.
-                    Distributed By <a class="border-bottom" href="https://themewagon.com">ThemeWagon</a>
+                    Designed By <a class="border-bottom" href="#">Carlos M. Espíndola</a>.
                 </div>
             </div>
         </div>
@@ -178,10 +214,13 @@
 
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top" data-sin-transicion><i class="bi bi-arrow-up"></i></a>
 
-    <a href="@contacto.LinkWhatsApp" target="_blank" rel="noopener"
-       class="wa-flotante" aria-label="Escribinos por WhatsApp">
-        <i class="fa-brands fa-whatsapp"></i>
-    </a>
+    @if (sitio.TieneWhatsApp)
+    {
+        <a href="@sitio.LinkWhatsApp" target="_blank" rel="noopener"
+           class="wa-flotante" aria-label="Escribinos por WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -195,7 +234,7 @@
     <script src="~/plantilla/js/main.js"></script>
 
     <script>
-            (function () {
+            (function() {
                 // Avisos con SweetAlert, en lugar de las cajas del navegador.
                 var Aviso = Swal.mixin({
                     toast: true,
@@ -203,7 +242,7 @@
                     showConfirmButton: false,
                     timer: 4500,
                     timerProgressBar: true,
-                    didOpen: function (t) {
+                    didOpen: function(t) {
                         t.addEventListener('mouseenter', Swal.stopTimer);
                         t.addEventListener('mouseleave', Swal.resumeTimer);
                     }
