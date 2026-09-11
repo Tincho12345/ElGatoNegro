@@ -46,7 +46,7 @@
         </div>
 
         <!-- Tarjetas de Resumen / Estadísticas -->
-        <div class="row g-4 mb-5">
+        <div class="row g-4 mb-5" id="panelResumen">
             <div class="col-sm-6 col-xl-3">
                 <div class="bg-light p-4 border rounded-4 shadow-sm text-center">
                     <h3 class="display-5 text-primary mb-2" data-contador="total">@Model.Trabajos.Count</h3>
@@ -74,6 +74,7 @@
         </div>
 
         <!-- Contenido Principal: Tabla o Estado Vacío -->
+        <div id="panelContenido">
         @if (!Model.Trabajos.Any())
         {
             <div class="text-center bg-light p-5 border rounded shadow-sm">
@@ -181,6 +182,7 @@
                 </div>
             </div>
         }
+        </div>
     </div>
 </div>
 

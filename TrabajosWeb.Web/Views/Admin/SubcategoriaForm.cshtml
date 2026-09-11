@@ -1,0 +1,105 @@
+@model TrabajosWeb.Web.Models.SubcategoriaFormViewModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nueva subcategoría" : "Editar subcategoría";
+    Layout = "_LayoutSalone";
+}
+
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Cabecera del Panel -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+            <div>
+                <h1 class="font-dancing-script text-primary mb-1">Administración</h1>
+                <h2 class="mb-0">@(Model.EsNuevo ? "Nueva subcategoría" : "Editar subcategoría")</h2>
+            </div>
+            <a asp-action="Subcategorias" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="fa-solid fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm" style="max-width: 680px;">
+            <div class="card-body p-4 p-md-5">
+                <form asp-action="GuardarSubcategoria" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none d-has-error"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Subcategoria.Nombre" class="form-label fw-semibold">Nombre</label>
+                        <input asp-for="Subcategoria.Nombre" class="form-control"
+                               placeholder="Cremas de tratamiento" autofocus />
+                        <span asp-validation-for="Subcategoria.Nombre" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Subcategoria.Descripcion" class="form-label fw-semibold">
+                            Descripción <span class="text-muted fw-normal">(opcional)</span>
+                        </label>
+                        <textarea asp-for="Subcategoria.Descripcion" class="form-control" rows="3"
+                                  placeholder="Qué productos entran en este grupo."></textarea>
+                        <span asp-validation-for="Subcategoria.Descripcion" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Subcategoria.Icono" class="form-label fw-semibold">
+                            Ícono <span class="text-muted fw-normal">(opcional)</span>
+                        </label>
+                        <input asp-for="Subcategoria.Icono" class="form-control"
+                               placeholder="fa-solid fa-pump-soap" />
+                        <div class="form-text">
+                            Clase de Font Awesome. Buscá el nombre en fontawesome.com y copiá la clase completa.
+                        </div>
+                        <span asp-validation-for="Subcategoria.Icono" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Subcategoria.Orden" class="form-label fw-semibold">Orden</label>
+                        <input asp-for="Subcategoria.Orden" class="form-control" type="number" min="0"
+                               style="max-width: 140px;" />
+                        <div class="form-text">Número más bajo, aparece antes en el filtro.</div>
+                        <span asp-validation-for="Subcategoria.Orden" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="Subcategoria.Activa" class="form-check-input" type="checkbox" />
+                        <label asp-for="Subcategoria.Activa" class="form-check-label fw-semibold">
+                            Activa
+                        </label>
+                        <div class="form-text">
+                            Si la desmarcás, deja de aparecer en el filtro de productos.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fa-solid fa-check me-1"></i> Guardar subcategoría
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Estilos {
+    <style>
+        html[data-tema="oscuro"] .card {
+            background-color: #1a1a1a !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+
+        html[data-tema="oscuro"] .form-control {
+            background-color: #222 !important;
+            color: #e0e0e0 !important;
+            border-color: #444 !important;
+        }
+
+        html[data-tema="oscuro"] .form-text {
+            color: #9a9a9a !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

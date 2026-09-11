@@ -1,193 +1,524 @@
 ﻿@using TrabajosWeb.Shared.DTOs
 @model TrabajosWeb.Web.Models.GaleriaViewModel
 @{
-    // Patrón de Salone: 6-3-3 / 3-3-6, repetido cada seis piezas.
-    var anchos = new[] { "col-md-6", "col-md-3", "col-md-3", "col-md-3", "col-md-3", "col-md-6" };
+    // Todas las piezas van al HTML de una vez. El filtro lo hace Isotope
+    // en el navegador, reacomodando las tarjetas sin pedir nada al servidor.
 
-    // La categoría "Productos" se muestra como tienda, no como galería.
-    var slugProductos = Model.Categorias
-        .FirstOrDefault(c => string.Equals(c.Nombre?.Trim(), "Productos", StringComparison.OrdinalIgnoreCase))
-        ?.Slug;
+    // Los filtros de subcategoría y marca solo tienen sentido dentro de
+    // Productos, y se arman con lo que realmente hay cargado.
+    var categoriaProductos = Model.Categorias.FirstOrDefault(c =>
+        string.Equals(c.Nombre?.Trim(), "Productos", StringComparison.OrdinalIgnoreCase));
 
-    var esTienda = !string.IsNullOrWhiteSpace(Model.CategoriaActual)
-        && Model.CategoriaActual == slugProductos;
+    var productos = categoriaProductos is null
+        ? new List<TrabajoDto>()
+        : Model.Trabajos.Where(t => t.CategoriaSlug == categoriaProductos.Slug).ToList();
+
+    var subcategorias = productos
+        .Where(t => !string.IsNullOrWhiteSpace(t.SubcategoriaSlug))
+        .GroupBy(t => t.SubcategoriaSlug!)
+        .Select(g => new { Slug = g.Key, Nombre = g.First().SubcategoriaNombre, Cantidad = g.Count() })
+        .OrderBy(x => x.Nombre)
+        .ToList();
+
+    var marcas = productos
+        .Where(t => !string.IsNullOrWhiteSpace(t.MarcaSlug))
+        .GroupBy(t => t.MarcaSlug!)
+        .Select(g => new { Slug = g.Key, Nombre = g.First().MarcaNombre, Cantidad = g.Count() })
+        .OrderBy(x => x.Nombre)
+        .ToList();
+
+    var hayOfertas = productos.Any(t => t.TieneOferta);
+    var mostrarFiltrosProducto = categoriaProductos is not null
+        && (subcategorias.Any() || marcas.Any() || hayOfertas);
+
+    // Más de esto y el grupo se corta con un "Ver más".
+    const int tope = 8;
 }
 
-@if (Model.Categorias.Any())
-{
-    <nav class="filtros" aria-label="Filtrar por tipo de trabajo">
-        <a asp-action="Index"
-           class="filtro @(string.IsNullOrEmpty(Model.CategoriaActual) ? "activo" : null)">
-            Todo
-        </a>
-        @foreach (var categoria in Model.Categorias)
-        {
-            <a asp-action="Index" asp-route-categoria="@categoria.Slug"
-               class="filtro @(Model.CategoriaActual == categoria.Slug ? "activo" : null)">
-                @if (!string.IsNullOrWhiteSpace(categoria.Icono))
-                {
-                    <i class="@categoria.Icono"></i>
-                }
-                @categoria.Nombre
-            </a>
-        }
-    </nav>
-}
+<div class="isotope-layout" data-layout="masonry" data-sort="original-order"
+     data-default-filter="@(string.IsNullOrEmpty(Model.CategoriaActual) ? "*" : "." + Model.CategoriaActual)"
+     data-slug-productos="@categoriaProductos?.Slug">
 
-@if (!Model.Trabajos.Any())
-{
-    <div class="galeria-vacia entra">
-        <i class="fa-regular fa-images d-block"></i>
-        <p class="fs-5">
-            @(string.IsNullOrEmpty(Model.CategoriaActual)
-                ? "Todavía no hay trabajos publicados."
-                : "No hay trabajos en esta categoría por ahora.")
-        </p>
-        <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
-           class="btn btn-primary text-uppercase px-5 py-3">
-            <i class="fa-brands fa-whatsapp me-2"></i>Consultanos
-        </a>
-    </div>
-}
-else if (esTienda)
-{
-    <div class="tienda">
-        <div class="row g-4">
-            @for (var i = 0; i < Model.Trabajos.Count; i++)
+    @if (Model.Categorias.Any())
+    {
+        <ul class="filtros isotope-filters" aria-label="Filtrar por tipo de trabajo">
+            <li data-filter="*" data-slug=""
+                class="@(string.IsNullOrEmpty(Model.CategoriaActual) ? "filter-active" : null)">
+                Todo
+            </li>
+            @foreach (var categoria in Model.Categorias)
             {
-                var producto = Model.Trabajos[i];
+                <li data-filter=".@categoria.Slug" data-slug="@categoria.Slug"
+                    class="@(Model.CategoriaActual == categoria.Slug ? "filter-active" : null)">
+                    @if (!string.IsNullOrWhiteSpace(categoria.Icono))
+                    {
+                        <i class="@categoria.Icono"></i>
+                    }
+                    @categoria.Nombre
+                </li>
+            }
+        </ul>
+    }
 
-                var portada = producto.Medios
-                    .OrderBy(m => m.Orden)
-                    .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+    <div class="row g-4">
+        @if (mostrarFiltrosProducto)
+        {
+            @* El panel lo muestra y lo oculta galeria.js según la categoría activa. *@
+            <aside class="col-lg-3 filtros-lateral" id="filtrosProducto" hidden>
+                <button type="button" class="filtros-abrir d-lg-none" id="abrirFiltros"
+                        aria-expanded="false" aria-controls="filtrosCuerpo">
+                    <i class="fa-solid fa-sliders me-2"></i>Filtros
+                    <span class="filtros-cuenta" id="filtrosCuenta" hidden></span>
+                </button>
 
-                var etiqueta = producto.EtiquetaCalculada;
+                <div class="filtros-cuerpo" id="filtrosCuerpo">
+                    <div class="filtros-encabezado d-none d-lg-flex">
+                        <span>Filtrar</span>
+                        <button type="button" class="filtro-limpiar" id="limpiarFiltros">Limpiar</button>
+                    </div>
 
-                <div class="col-lg-3 col-md-4 col-sm-6 entra" style="animation-delay:@(i * 60)ms;">
-                    <a asp-action="Detalle" asp-route-id="@producto.Id" class="producto-card h-100">
-                        <div class="producto-foto">
-                            @if (portada is not null)
+                    @if (subcategorias.Any())
+                    {
+                        <section class="filtro-grupo">
+                            <button type="button" class="filtro-cabecera" aria-expanded="true">
+                                Tipo <i class="fa-solid fa-chevron-up"></i>
+                            </button>
+                            <div class="filtro-lista" data-grupo="subcat">
+                                <button type="button" class="filtro-opcion activo" data-valor="">
+                                    Todos
+                                </button>
+                                @for (var i = 0; i < subcategorias.Count; i++)
+                                {
+                                    var sub = subcategorias[i];
+                                    <button type="button"
+                                            class="filtro-opcion @(i >= tope ? "extra" : null)"
+                                            data-valor="@sub.Slug">
+                                        @sub.Nombre <span class="filtro-cantidad">@sub.Cantidad</span>
+                                    </button>
+                                }
+                            </div>
+                            @if (subcategorias.Count > tope)
                             {
-                                <img src="@(Model.ApiBaseUrl + portada.Url)"
-                                     alt="@(portada.TextoAlternativo ?? producto.Titulo)" loading="lazy" />
+                                <button type="button" class="filtro-vermas" aria-expanded="false">
+                                    Ver más (@(subcategorias.Count - tope))
+                                </button>
                             }
-                            else
-                            {
-                                <div class="producto-sin-foto"><i class="fa-solid fa-bottle-droplet"></i></div>
-                            }
+                        </section>
+                    }
 
-                            @if (producto.Destacado)
+                    @if (marcas.Any())
+                    {
+                        <section class="filtro-grupo">
+                            <button type="button" class="filtro-cabecera" aria-expanded="true">
+                                Marca <i class="fa-solid fa-chevron-up"></i>
+                            </button>
+                            <div class="filtro-lista" data-grupo="marca">
+                                <button type="button" class="filtro-opcion activo" data-valor="">
+                                    Todas
+                                </button>
+                                @for (var i = 0; i < marcas.Count; i++)
+                                {
+                                    var marca = marcas[i];
+                                    <button type="button"
+                                            class="filtro-opcion @(i >= tope ? "extra" : null)"
+                                            data-valor="@marca.Slug">
+                                        @marca.Nombre <span class="filtro-cantidad">@marca.Cantidad</span>
+                                    </button>
+                                }
+                            </div>
+                            @if (marcas.Count > tope)
                             {
-                                <span class="producto-destacado"><i class="fa-solid fa-star"></i></span>
+                                <button type="button" class="filtro-vermas" aria-expanded="false">
+                                    Ver más (@(marcas.Count - tope))
+                                </button>
                             }
+                        </section>
+                    }
+
+                    <section class="filtro-grupo">
+                        <button type="button" class="filtro-cabecera" aria-expanded="true">
+                            Precio <i class="fa-solid fa-chevron-up"></i>
+                        </button>
+                        <div class="filtro-lista">
+                            <div class="filtro-precio">
+                                <input type="number" id="precioMin" min="0" step="100" placeholder="Mínimo"
+                                       aria-label="Precio mínimo" />
+                                <input type="number" id="precioMax" min="0" step="100" placeholder="Máximo"
+                                       aria-label="Precio máximo" />
+                            </div>
                         </div>
+                    </section>
 
-                        <div class="producto-cuerpo">
-                            <h3 class="producto-titulo">@producto.Titulo</h3>
+                    @if (hayOfertas)
+                    {
+                        <section class="filtro-grupo">
+                            <label class="filtro-oferta">
+                                <input type="checkbox" id="soloOferta" />
+                                <span>Solo ofertas</span>
+                            </label>
+                        </section>
+                    }
 
-                            @if (producto.PrecioAnterior > producto.Precio || !string.IsNullOrWhiteSpace(etiqueta))
-                            {
-                                <div class="producto-linea-oferta">
-                                    @if (!string.IsNullOrWhiteSpace(etiqueta))
+                    <button type="button" class="filtro-limpiar ancho d-lg-none" id="limpiarFiltrosMovil">
+                        <i class="fa-solid fa-rotate-left me-1"></i>Limpiar filtros
+                    </button>
+                </div>
+            </aside>
+        }
+
+        <div class="col-12" id="galeriaColumna">
+            @if (!Model.Trabajos.Any())
+            {
+                <div class="galeria-vacia">
+                    <i class="fa-regular fa-images d-block"></i>
+                    <p class="fs-5">Todavía no hay trabajos publicados.</p>
+                    <a href="@Model.Contacto.LinkWhatsApp" target="_blank" rel="noopener"
+                       class="btn btn-primary text-uppercase px-5 py-3">
+                        <i class="fa-brands fa-whatsapp me-2"></i>Consultanos
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="galeria-sin-resultados">
+                    <i class="fa-regular fa-face-frown d-block"></i>
+                    <p class="fs-5 mb-0">No hay nada que coincida con esos filtros.</p>
+                </div>
+
+                <div class="row g-4 isotope-container">
+                    @foreach (var trabajo in Model.Trabajos)
+                    {
+                        var portada = trabajo.Medios
+                            .OrderBy(m => m.Orden)
+                            .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+
+                        var videos = trabajo.Medios.Count(m => m.Tipo == TipoMedia.Video);
+                        var etiqueta = trabajo.EtiquetaCalculada;
+
+                        <div class="col-xl-4 col-md-6 isotope-item @trabajo.CategoriaSlug"
+                             data-subcat="@trabajo.SubcategoriaSlug"
+                             data-marca="@trabajo.MarcaSlug"
+                             data-precio="@(trabajo.Precio?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                             data-oferta="@(trabajo.TieneOferta ? "1" : "0")">
+                            <a asp-action="Detalle" asp-route-id="@trabajo.Id" class="gallery-item d-block">
+                                @if (portada is not null)
+                                {
+                                    <img src="@(Model.ApiBaseUrl + portada.Url)"
+                                         alt="@(portada.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <div class="pieza-vacia"><i class="fa-solid fa-scissors"></i></div>
+                                }
+
+                                @if (trabajo.Destacado)
+                                {
+                                    <span class="marca-destacado">Destacado</span>
+                                }
+
+                                @if (videos > 0 || !string.IsNullOrWhiteSpace(etiqueta))
+                                {
+                                    <div class="marcas-derecha">
+                                        @if (!string.IsNullOrWhiteSpace(etiqueta))
+                                        {
+                                            <span class="marca-oferta">@etiqueta</span>
+                                        }
+                                        @if (videos > 0)
+                                        {
+                                            <span class="marca-video"><i class="fa-solid fa-play"></i>@videos</span>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="gallery-icon">
+                                    <span class="btn btn-primary btn-lg-square"><i class="fa-solid fa-eye"></i></span>
+                                </div>
+
+                                <div class="pieza-pie">
+                                    <h3 class="pieza-titulo">@trabajo.Titulo</h3>
+                                    <span class="pieza-categoria">@trabajo.CategoriaNombre</span>
+
+                                    @if (!string.IsNullOrWhiteSpace(trabajo.MarcaNombre))
                                     {
-                                        <span class="producto-off">@etiqueta</span>
+                                        <span class="pieza-marca">@trabajo.MarcaNombre</span>
                                     }
-                                    @if (producto.PrecioAnterior > producto.Precio)
+
+                                    @if (trabajo.Precio.HasValue)
                                     {
-                                        <span class="producto-antes">@producto.PrecioAnterior!.Value.ToString("C0")</span>
+                                        <div class="pieza-precio">
+                                            @if (trabajo.PrecioAnterior > trabajo.Precio)
+                                            {
+                                                <span class="precio-anterior">@trabajo.PrecioAnterior!.Value.ToString("C0")</span>
+                                            }
+                                            <span class="precio-actual">@trabajo.Precio.Value.ToString("C0")</span>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(trabajo.TextoOferta))
+                                    {
+                                        <span class="pieza-oferta">@trabajo.TextoOferta</span>
                                     }
                                 </div>
-                            }
-
-                            @if (producto.Precio.HasValue)
-                            {
-                                <div class="producto-precio">@producto.Precio.Value.ToString("C0")</div>
-                            }
-
-                            @if (!string.IsNullOrWhiteSpace(producto.TextoOferta))
-                            {
-                                <span class="producto-nota">@producto.TextoOferta</span>
-                            }
-
-                            <span class="producto-vermas">Ver más <i class="fa-solid fa-arrow-right"></i></span>
+                            </a>
                         </div>
-                    </a>
+                    }
                 </div>
             }
         </div>
     </div>
-}
-else
-{
-    <div class="row g-4">
-        @for (var i = 0; i < Model.Trabajos.Count; i++)
-        {
-            var trabajo = Model.Trabajos[i];
+</div>
 
-            var portada = trabajo.Medios
-                .OrderBy(m => m.Orden)
-                .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
+<style>
+    /* ---------- Panel lateral de filtros ---------- */
+    .filtros-lateral {
+        font-size: .92rem;
+    }
 
-            var videos = trabajo.Medios.Count(m => m.Tipo == TipoMedia.Video);
-            var etiqueta = trabajo.EtiquetaCalculada;
+    .filtros-cuerpo {
+        border: 1px solid rgba(0, 0, 0, .1);
+        border-radius: .5rem;
+        padding: 1.25rem;
+        background-color: rgba(0, 0, 0, .015);
+    }
 
-            <div class="@anchos[i % 6] entra" style="animation-delay:@(i * 60)ms;">
-                <a asp-action="Detalle" asp-route-id="@trabajo.Id" class="gallery-item d-block">
-                    @if (portada is not null)
-                    {
-                        <img src="@(Model.ApiBaseUrl + portada.Url)"
-                             alt="@(portada.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
-                    }
-                    else
-                    {
-                        <div class="pieza-vacia"><i class="fa-solid fa-scissors"></i></div>
-                    }
-
-                    @if (trabajo.Destacado)
-                    {
-                        <span class="marca-destacado">Destacado</span>
-                    }
-
-                    @if (videos > 0 || !string.IsNullOrWhiteSpace(etiqueta))
-                    {
-                        <div class="marcas-derecha">
-                            @if (!string.IsNullOrWhiteSpace(etiqueta))
-                            {
-                                <span class="marca-oferta">@etiqueta</span>
-                            }
-                            @if (videos > 0)
-                            {
-                                <span class="marca-video"><i class="fa-solid fa-play"></i>@videos</span>
-                            }
-                        </div>
-                    }
-
-                    <div class="gallery-icon">
-                        <span class="btn btn-primary btn-lg-square"><i class="fa-solid fa-eye"></i></span>
-                    </div>
-
-                    <div class="pieza-pie">
-                        <h3 class="pieza-titulo">@trabajo.Titulo</h3>
-                        <span class="pieza-categoria">@trabajo.CategoriaNombre</span>
-
-                        @if (trabajo.Precio.HasValue)
-                        {
-                            <div class="pieza-precio">
-                                @if (trabajo.PrecioAnterior > trabajo.Precio)
-                                {
-                                    <span class="precio-anterior">@trabajo.PrecioAnterior!.Value.ToString("C0")</span>
-                                }
-                                <span class="precio-actual">@trabajo.Precio.Value.ToString("C0")</span>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrWhiteSpace(trabajo.TextoOferta))
-                        {
-                            <span class="pieza-oferta">@trabajo.TextoOferta</span>
-                        }
-                    </div>
-                </a>
-            </div>
+    @@media (min-width: 992px) {
+        .filtros-cuerpo {
+            position: sticky;
+            top: 100px;
+            max-height: calc(100vh - 130px);
+            overflow-y: auto;
         }
-    </div>
-}
+    }
+
+    .filtros-encabezado {
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: .75rem;
+        margin-bottom: .5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, .1);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-size: .8rem;
+    }
+
+    .filtro-grupo + .filtro-grupo {
+        border-top: 1px solid rgba(0, 0, 0, .08);
+        margin-top: .75rem;
+        padding-top: .75rem;
+    }
+
+    .filtro-cabecera {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: .4rem 0;
+        background: none;
+        border: 0;
+        font-weight: 600;
+        color: inherit;
+        cursor: pointer;
+    }
+
+        .filtro-cabecera i {
+            font-size: .7rem;
+            opacity: .5;
+            transition: transform .2s ease;
+        }
+
+        .filtro-cabecera[aria-expanded="false"] i {
+            transform: rotate(180deg);
+        }
+
+        .filtro-cabecera[aria-expanded="false"] + .filtro-lista {
+            display: none;
+        }
+
+    .filtro-lista {
+        display: flex;
+        flex-direction: column;
+        gap: .1rem;
+        padding-top: .35rem;
+    }
+
+    .filtro-opcion {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .5rem;
+        width: 100%;
+        padding: .35rem .5rem;
+        background: none;
+        border: 0;
+        border-radius: .3rem;
+        text-align: left;
+        color: inherit;
+        cursor: pointer;
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+        .filtro-opcion:hover {
+            background-color: rgba(0, 0, 0, .05);
+        }
+
+        .filtro-opcion.activo {
+            color: var(--bs-primary);
+            font-weight: 700;
+        }
+
+        .filtro-opcion.extra {
+            display: none;
+        }
+
+    .filtro-lista.expandida .filtro-opcion.extra {
+        display: flex;
+    }
+
+    .filtro-cantidad {
+        font-size: .78rem;
+        opacity: .55;
+        font-weight: 400;
+    }
+
+    .filtro-vermas {
+        margin-top: .3rem;
+        padding: .25rem .5rem;
+        background: none;
+        border: 0;
+        font-size: .85rem;
+        color: var(--bs-primary);
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .filtro-precio {
+        display: flex;
+        gap: .5rem;
+        padding: .25rem .5rem;
+    }
+
+        .filtro-precio input {
+            width: 100%;
+            min-width: 0;
+            padding: .4rem .6rem;
+            font-size: .85rem;
+            border: 1px solid rgba(0, 0, 0, .18);
+            border-radius: .35rem;
+            background: transparent;
+            color: inherit;
+        }
+
+    .filtro-oferta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .4rem .5rem;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .filtro-limpiar {
+        padding: .25rem .75rem;
+        font-size: .8rem;
+        background: none;
+        border: 1px solid rgba(0, 0, 0, .18);
+        border-radius: 2rem;
+        color: inherit;
+        cursor: pointer;
+    }
+
+        .filtro-limpiar:hover {
+            border-color: var(--bs-primary);
+            color: var(--bs-primary);
+        }
+
+        .filtro-limpiar.ancho {
+            width: 100%;
+            margin-top: 1rem;
+            padding: .5rem;
+            border-radius: .35rem;
+        }
+
+    /* Botón que abre el panel en pantallas chicas */
+    .filtros-abrir {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: .6rem 1rem;
+        margin-bottom: .75rem;
+        background: none;
+        border: 1px solid rgba(0, 0, 0, .18);
+        border-radius: .35rem;
+        font-weight: 600;
+        color: inherit;
+        cursor: pointer;
+    }
+
+    .filtros-cuenta {
+        margin-left: .5rem;
+        padding: .05rem .5rem;
+        font-size: .78rem;
+        background-color: var(--bs-primary);
+        color: #fff;
+        border-radius: 1rem;
+    }
+
+    @@media (max-width: 991.98px) {
+        .filtros-cuerpo {
+            display: none;
+        }
+
+            .filtros-cuerpo.abierto {
+                display: block;
+            }
+    }
+
+    /* Aviso cuando el filtro no deja nada */
+    .galeria-sin-resultados {
+        display: none;
+        padding: 3rem 1rem;
+        text-align: center;
+        opacity: .7;
+    }
+
+        .galeria-sin-resultados.visible {
+            display: block;
+        }
+
+        .galeria-sin-resultados i {
+            font-size: 2.5rem;
+            margin-bottom: .75rem;
+        }
+
+    .pieza-marca {
+        display: block;
+        font-size: .78rem;
+        opacity: .75;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    /* ---------- Tema oscuro ---------- */
+    html[data-tema="oscuro"] .filtros-cuerpo {
+        background-color: rgba(255, 255, 255, .04);
+        border-color: rgba(255, 255, 255, .12);
+    }
+
+    html[data-tema="oscuro"] .filtros-encabezado,
+    html[data-tema="oscuro"] .filtro-grupo + .filtro-grupo {
+        border-color: rgba(255, 255, 255, .12);
+    }
+
+    html[data-tema="oscuro"] .filtro-opcion:hover {
+        background-color: rgba(255, 255, 255, .08);
+    }
+
+    html[data-tema="oscuro"] .filtro-limpiar,
+    html[data-tema="oscuro"] .filtros-abrir,
+    html[data-tema="oscuro"] .filtro-precio input {
+        border-color: rgba(255, 255, 255, .2);
+        color: #e0e0e0;
+    }
+</style>

@@ -25,11 +25,20 @@ public class TrabajosController : ControllerBase
         _storage = storage;
     }
 
-    /// <summary>Galería pública, opcionalmente filtrada por categoría.</summary>
+    /// <summary>
+    /// Galería pública. Todos los filtros son opcionales: sin ninguno devuelve
+    /// lo mismo de siempre. Subcategoría, marca y precio solo tienen sentido
+    /// dentro de Productos.
+    /// </summary>
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<List<TrabajoDto>>> GetPublicados(
         [FromQuery] string? categoria,
+        [FromQuery] string? subcategoria,
+        [FromQuery] string? marca,
+        [FromQuery] decimal? precioMin,
+        [FromQuery] decimal? precioMax,
+        [FromQuery] bool? enOferta,
         CancellationToken ct)
     {
         var query = _context.Trabajos
@@ -39,6 +48,28 @@ public class TrabajosController : ControllerBase
         if (!string.IsNullOrWhiteSpace(categoria))
             query = query.Where(t => t.Categoria!.Slug == categoria);
 
+        if (!string.IsNullOrWhiteSpace(subcategoria))
+            query = query.Where(t => t.Subcategoria != null && t.Subcategoria.Slug == subcategoria);
+
+        if (!string.IsNullOrWhiteSpace(marca))
+            query = query.Where(t => t.Marca != null && t.Marca.Slug == marca);
+
+        // Filtrar por precio descarta lo que no tiene precio cargado:
+        // un trabajo sin precio no pertenece a ningún rango.
+        if (precioMin.HasValue)
+            query = query.Where(t => t.Precio >= precioMin.Value);
+
+        if (precioMax.HasValue)
+            query = query.Where(t => t.Precio <= precioMax.Value);
+
+        if (enOferta == true)
+        {
+            query = query.Where(t =>
+                (t.PrecioAnterior != null && t.Precio != null && t.PrecioAnterior > t.Precio)
+                || (t.EtiquetaOferta != null && t.EtiquetaOferta != "")
+                || (t.TextoOferta != null && t.TextoOferta != ""));
+        }
+
         var lista = await query
             .OrderByDescending(t => t.Destacado)
             .ThenByDescending(t => t.CreatedDate)
@@ -46,6 +77,37 @@ public class TrabajosController : ControllerBase
             .ToListAsync(ct);
 
         return Ok(lista);
+    }
+
+    /// <summary>
+    /// Precio más bajo y más alto de los productos publicados de una categoría.
+    /// Sirve para armar el control de rango sin inventar los topes.
+    /// </summary>
+    [HttpGet("rango-precios")]
+    [AllowAnonymous]
+    public async Task<ActionResult<RangoPreciosDto>> GetRangoPrecios(
+        [FromQuery] string? categoria,
+        CancellationToken ct)
+    {
+        var query = _context.Trabajos
+            .AsNoTracking()
+            .Where(t => t.Publicado && t.Precio != null);
+
+        if (!string.IsNullOrWhiteSpace(categoria))
+            query = query.Where(t => t.Categoria!.Slug == categoria);
+
+        var precios = await query
+            .Select(t => t.Precio!.Value)
+            .ToListAsync(ct);
+
+        if (precios.Count == 0)
+            return Ok(new RangoPreciosDto());
+
+        return Ok(new RangoPreciosDto
+        {
+            Minimo = precios.Min(),
+            Maximo = precios.Max()
+        });
     }
 
     /// <summary>Listado completo para el panel admin, incluidos los no publicados.</summary>
@@ -97,6 +159,7 @@ public class TrabajosController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "SoloAdmin")]
     public async Task<IActionResult> Actualizar(Guid id, TrabajoCreateDto dto, CancellationToken ct)
     {
         var trabajo = await _context.Trabajos.FirstOrDefaultAsync(t => t.Id == id, ct);
@@ -110,6 +173,7 @@ public class TrabajosController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "SoloAdmin")]
     public async Task<IActionResult> Eliminar(Guid id, CancellationToken ct)
     {
         var trabajo = await _context.Trabajos

@@ -25,30 +25,30 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(string? categoria, CancellationToken ct)
     {
-        var ruta = string.IsNullOrWhiteSpace(categoria)
-            ? "api/Trabajos"
-            : $"api/Trabajos?categoria={Uri.EscapeDataString(categoria)}";
-
-        var trabajos = await _api.GetAsync<List<TrabajoDto>>(ruta, ct) ?? new();
+        // Traemos todos los trabajos siempre: el filtro por categoría lo
+        // resuelve Isotope en el navegador, sin volver al servidor.
+        // El parámetro sigue existiendo para que el enlace directo a una
+        // categoría abra la galería ya filtrada.
+        var trabajos = await _api.GetAsync<List<TrabajoDto>>("api/Trabajos", ct) ?? new();
         var categorias = await _api.GetAsync<List<CategoriaDto>>("api/Categorias", ct) ?? new();
+        var servicios = await _api.GetAsync<List<CategoriaDto>>("api/Categorias/servicios", ct) ?? new();
 
-        var modelo = new GaleriaViewModel
+        // Si el slug no existe, mostramos todo en lugar de una galería vacía.
+        if (!string.IsNullOrWhiteSpace(categoria)
+            && !categorias.Any(c => c.Slug == categoria))
+        {
+            categoria = null;
+        }
+
+        return View(new GaleriaViewModel
         {
             Trabajos = trabajos,
             Categorias = categorias,
+            Servicios = servicios,
             CategoriaActual = categoria,
             Contacto = _contacto,
             ApiBaseUrl = _apiBaseUrl
-        };
-
-        // Al filtrar desde la web se pide solo la grilla, para no recargar
-        // la página entera. Ver wwwroot/js/galeria.js
-        if (EsPeticionAjax())
-            return PartialView("_GaleriaGrilla", modelo);
-
-        modelo.Servicios = await _api.GetAsync<List<CategoriaDto>>("api/Categorias/servicios", ct) ?? new();
-
-        return View(modelo);
+        });
     }
 
     public async Task<IActionResult> Detalle(Guid id, CancellationToken ct)
@@ -110,8 +110,4 @@ public class HomeController : Controller
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() => View();
-
-    /// <summary>La petición vino por fetch desde la vista, no por navegación del navegador.</summary>
-    private bool EsPeticionAjax() =>
-        Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 }

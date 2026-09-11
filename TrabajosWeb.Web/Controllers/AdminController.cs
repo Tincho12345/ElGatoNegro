@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
@@ -48,11 +48,18 @@ public class AdminController : Controller
     [HttpGet]
     public async Task<IActionResult> NuevoTrabajo(CancellationToken ct)
     {
-        return View("TrabajoForm", new TrabajoFormViewModel
+        var modelo = new TrabajoFormViewModel
         {
-            Categorias = await CargarCategoriasAsync(ct),
             ApiBaseUrl = _apiBaseUrl
-        });
+        };
+
+        await CompletarListasAsync(modelo, ct);
+
+        // Desde el panel se pide por fetch para mostrarlo en un modal.
+        if (EsPeticionAjax())
+            return PartialView("_TrabajoFormModal", modelo);
+
+        return View("TrabajoForm", modelo);
     }
 
     [HttpGet]
@@ -62,7 +69,7 @@ public class AdminController : Controller
         if (trabajo is null)
             return NotFound();
 
-        return View("TrabajoForm", new TrabajoFormViewModel
+        var modelo = new TrabajoFormViewModel
         {
             Id = trabajo.Id,
             Trabajo = new TrabajoCreateDto
@@ -70,6 +77,8 @@ public class AdminController : Controller
                 Titulo = trabajo.Titulo,
                 Descripcion = trabajo.Descripcion,
                 CategoriaId = trabajo.CategoriaId,
+                SubcategoriaId = trabajo.SubcategoriaId,
+                MarcaId = trabajo.MarcaId,
                 Precio = trabajo.Precio,
                 PrecioAnterior = trabajo.PrecioAnterior,
                 EtiquetaOferta = trabajo.EtiquetaOferta,
@@ -78,9 +87,15 @@ public class AdminController : Controller
                 Destacado = trabajo.Destacado
             },
             MediosActuales = trabajo.Medios.OrderBy(m => m.Orden).ToList(),
-            Categorias = await CargarCategoriasAsync(ct),
             ApiBaseUrl = _apiBaseUrl
-        });
+        };
+
+        await CompletarListasAsync(modelo, ct);
+
+        if (EsPeticionAjax())
+            return PartialView("_TrabajoFormModal", modelo);
+
+        return View("TrabajoForm", modelo);
     }
 
     [HttpPost]
@@ -90,11 +105,29 @@ public class AdminController : Controller
         List<IFormFile>? archivos,
         CancellationToken ct)
     {
+        var esAjax = EsPeticionAjax();
+
         if (!ModelState.IsValid)
         {
-            modelo.Categorias = await CargarCategoriasAsync(ct);
+            var errores = ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .SelectMany(e => e.Value!.Errors.Select(x => x.ErrorMessage))
+                .ToList();
+
+            if (esAjax)
+                return Json(new { ok = false, error = string.Join(" ", errores) });
+
             modelo.ApiBaseUrl = _apiBaseUrl;
+            await CompletarListasAsync(modelo, ct);
             return View("TrabajoForm", modelo);
+        }
+
+        // Subcategoría y marca son solo de productos: si la categoría es otra,
+        // se limpian para que no queden colgadas de un corte o un brushing.
+        if (modelo.Trabajo.CategoriaId != await ObtenerCategoriaProductosIdAsync(ct))
+        {
+            modelo.Trabajo.SubcategoriaId = null;
+            modelo.Trabajo.MarcaId = null;
         }
 
         Guid trabajoId;
@@ -105,9 +138,14 @@ public class AdminController : Controller
 
             if (!ok || creado is null)
             {
-                ModelState.AddModelError(string.Empty, error ?? "No se pudo crear el trabajo.");
-                modelo.Categorias = await CargarCategoriasAsync(ct);
+                var mensaje = error ?? "No se pudo crear el trabajo.";
+
+                if (esAjax)
+                    return Json(new { ok = false, error = mensaje });
+
+                ModelState.AddModelError(string.Empty, mensaje);
                 modelo.ApiBaseUrl = _apiBaseUrl;
+                await CompletarListasAsync(modelo, ct);
                 return View("TrabajoForm", modelo);
             }
 
@@ -119,9 +157,14 @@ public class AdminController : Controller
 
             if (!ok)
             {
-                ModelState.AddModelError(string.Empty, error ?? "No se pudo guardar.");
-                modelo.Categorias = await CargarCategoriasAsync(ct);
+                var mensaje = error ?? "No se pudo guardar.";
+
+                if (esAjax)
+                    return Json(new { ok = false, error = mensaje });
+
+                ModelState.AddModelError(string.Empty, mensaje);
                 modelo.ApiBaseUrl = _apiBaseUrl;
+                await CompletarListasAsync(modelo, ct);
                 return View("TrabajoForm", modelo);
             }
 
@@ -136,10 +179,18 @@ public class AdminController : Controller
 
             if (!okArchivos)
             {
-                TempData["Error"] = $"El trabajo se guardó, pero los archivos fallaron: {errorArchivos}";
+                var mensaje = $"El trabajo se guardó, pero los archivos fallaron: {errorArchivos}";
+
+                if (esAjax)
+                    return Json(new { ok = true, id = trabajoId, aviso = mensaje });
+
+                TempData["Error"] = mensaje;
                 return RedirectToAction(nameof(EditarTrabajo), new { id = trabajoId });
             }
         }
+
+        if (esAjax)
+            return Json(new { ok = true, id = trabajoId });
 
         TempData["Exito"] = "Trabajo guardado correctamente.";
         return RedirectToAction(nameof(EditarTrabajo), new { id = trabajoId });
@@ -150,6 +201,23 @@ public class AdminController : Controller
     public async Task<IActionResult> EliminarTrabajo(Guid id, CancellationToken ct)
     {
         var (ok, error) = await _api.DeleteAsync($"api/Trabajos/{id}", ct);
+
+        // Desde el panel se llama por fetch y se espera JSON: un redirect
+        // haría que el navegador traiga el HTML y falle al parsearlo.
+        if (EsPeticionAjax())
+        {
+            if (!ok)
+                return Json(new { ok = false, error = error ?? "No se pudo eliminar." });
+
+            var trabajos = await _api.GetAsync<List<TrabajoDto>>("api/Trabajos/admin", ct) ?? new();
+
+            return Json(new
+            {
+                ok = true,
+                total = trabajos.Count,
+                publicados = trabajos.Count(t => t.Publicado)
+            });
+        }
 
         if (ok)
             TempData["Exito"] = "Trabajo eliminado.";
@@ -259,6 +327,166 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Categorias));
     }
 
+    // ---------- Subcategorías ----------
+
+    public async Task<IActionResult> Subcategorias(CancellationToken ct)
+    {
+        var lista = await _api.GetAsync<List<SubcategoriaDto>>("api/Subcategorias/admin", ct) ?? new();
+        return View(lista);
+    }
+
+    [HttpGet]
+    public IActionResult NuevaSubcategoria()
+    {
+        return View("SubcategoriaForm", new SubcategoriaFormViewModel());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditarSubcategoria(Guid id, CancellationToken ct)
+    {
+        var subcategoria = await _api.GetAsync<SubcategoriaDto>($"api/Subcategorias/{id}", ct);
+        if (subcategoria is null)
+            return NotFound();
+
+        return View("SubcategoriaForm", new SubcategoriaFormViewModel
+        {
+            Id = subcategoria.Id,
+            Subcategoria = new SubcategoriaCreateDto
+            {
+                Nombre = subcategoria.Nombre,
+                Descripcion = subcategoria.Descripcion,
+                Icono = subcategoria.Icono,
+                Orden = subcategoria.Orden,
+                Activa = subcategoria.Activa
+            }
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarSubcategoria(SubcategoriaFormViewModel modelo, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+            return View("SubcategoriaForm", modelo);
+
+        string? error;
+
+        if (modelo.Id is null)
+        {
+            (var ok, _, error) = await _api.PostAsync<SubcategoriaDto>("api/Subcategorias", modelo.Subcategoria, ct);
+            if (ok)
+            {
+                TempData["Exito"] = "Subcategoría creada.";
+                return RedirectToAction(nameof(Subcategorias));
+            }
+        }
+        else
+        {
+            (var ok, error) = await _api.PutAsync($"api/Subcategorias/{modelo.Id}", modelo.Subcategoria, ct);
+            if (ok)
+            {
+                TempData["Exito"] = "Subcategoría actualizada.";
+                return RedirectToAction(nameof(Subcategorias));
+            }
+        }
+
+        ModelState.AddModelError(string.Empty, error ?? "No se pudo guardar la subcategoría.");
+        return View("SubcategoriaForm", modelo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarSubcategoria(Guid id, CancellationToken ct)
+    {
+        var (ok, error) = await _api.DeleteAsync($"api/Subcategorias/{id}", ct);
+
+        if (ok)
+            TempData["Exito"] = "Subcategoría eliminada.";
+        else
+            TempData["Error"] = error ?? "No se pudo eliminar.";
+
+        return RedirectToAction(nameof(Subcategorias));
+    }
+
+    // ---------- Marcas ----------
+
+    public async Task<IActionResult> Marcas(CancellationToken ct)
+    {
+        var lista = await _api.GetAsync<List<MarcaDto>>("api/Marcas/admin", ct) ?? new();
+        return View(lista);
+    }
+
+    [HttpGet]
+    public IActionResult NuevaMarca()
+    {
+        return View("MarcaForm", new MarcaFormViewModel());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditarMarca(Guid id, CancellationToken ct)
+    {
+        var marca = await _api.GetAsync<MarcaDto>($"api/Marcas/{id}", ct);
+        if (marca is null)
+            return NotFound();
+
+        return View("MarcaForm", new MarcaFormViewModel
+        {
+            Id = marca.Id,
+            Marca = new MarcaCreateDto
+            {
+                Nombre = marca.Nombre,
+                Orden = marca.Orden,
+                Activa = marca.Activa
+            }
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarMarca(MarcaFormViewModel modelo, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+            return View("MarcaForm", modelo);
+
+        string? error;
+
+        if (modelo.Id is null)
+        {
+            (var ok, _, error) = await _api.PostAsync<MarcaDto>("api/Marcas", modelo.Marca, ct);
+            if (ok)
+            {
+                TempData["Exito"] = "Marca creada.";
+                return RedirectToAction(nameof(Marcas));
+            }
+        }
+        else
+        {
+            (var ok, error) = await _api.PutAsync($"api/Marcas/{modelo.Id}", modelo.Marca, ct);
+            if (ok)
+            {
+                TempData["Exito"] = "Marca actualizada.";
+                return RedirectToAction(nameof(Marcas));
+            }
+        }
+
+        ModelState.AddModelError(string.Empty, error ?? "No se pudo guardar la marca.");
+        return View("MarcaForm", modelo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarMarca(Guid id, CancellationToken ct)
+    {
+        var (ok, error) = await _api.DeleteAsync($"api/Marcas/{id}", ct);
+
+        if (ok)
+            TempData["Exito"] = "Marca eliminada.";
+        else
+            TempData["Error"] = error ?? "No se pudo eliminar.";
+
+        return RedirectToAction(nameof(Marcas));
+    }
+
     // ---------- Datos del sitio ----------
 
     [HttpGet]
@@ -350,15 +578,50 @@ public class AdminController : Controller
 
     // ---------- Auxiliares ----------
 
-    private async Task<List<SelectListItem>> CargarCategoriasAsync(CancellationToken ct)
+    /// <summary>
+    /// Deja el formulario de trabajo con los tres desplegables cargados y con
+    /// el Id de Productos, que es lo que la vista mira para mostrar u ocultar
+    /// subcategoría y marca.
+    /// </summary>
+    private async Task CompletarListasAsync(TrabajoFormViewModel modelo, CancellationToken ct)
     {
         var categorias = await _api.GetAsync<List<CategoriaDto>>("api/Categorias/admin", ct) ?? new();
 
-        return categorias
+        modelo.Categorias = categorias
             .Where(c => c.Activa)
             .Select(c => new SelectListItem(c.Nombre, c.Id.ToString()))
             .ToList();
+
+        modelo.CategoriaProductosId = BuscarCategoriaProductos(categorias)?.Id;
+
+        var subcategorias = await _api.GetAsync<List<SubcategoriaDto>>("api/Subcategorias/admin", ct) ?? new();
+
+        modelo.Subcategorias = subcategorias
+            .Where(s => s.Activa)
+            .Select(s => new SelectListItem(s.Nombre, s.Id.ToString()))
+            .ToList();
+
+        var marcas = await _api.GetAsync<List<MarcaDto>>("api/Marcas/admin", ct) ?? new();
+
+        modelo.Marcas = marcas
+            .Where(m => m.Activa)
+            .Select(m => new SelectListItem(m.Nombre, m.Id.ToString()))
+            .ToList();
     }
+
+    private async Task<Guid?> ObtenerCategoriaProductosIdAsync(CancellationToken ct)
+    {
+        var categorias = await _api.GetAsync<List<CategoriaDto>>("api/Categorias/admin", ct) ?? new();
+        return BuscarCategoriaProductos(categorias)?.Id;
+    }
+
+    /// <summary>
+    /// Se identifica por nombre, igual que en la home. Si algún día se renombra
+    /// la categoría, hay que tocar las dos partes.
+    /// </summary>
+    private static CategoriaDto? BuscarCategoriaProductos(List<CategoriaDto> categorias) =>
+        categorias.FirstOrDefault(c =>
+            string.Equals(c.Nombre?.Trim(), "Productos", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>La petición vino por fetch desde la vista, no por navegación del navegador.</summary>
     private bool EsPeticionAjax() =>

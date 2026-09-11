@@ -22,6 +22,8 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Subcategoria> Subcategorias => Set<Subcategoria>();
+    public DbSet<Marca> Marcas => Set<Marca>();
     public DbSet<AjustesSitio> AjustesSitio => Set<AjustesSitio>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,6 +71,38 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Categoria>()
             .HasIndex(c => c.Orden);
+
+        // Subcategoría y marca son opcionales: borrarlas nunca arrastra trabajos,
+        // por eso Restrict. El panel avisa si todavía tienen productos asociados.
+        modelBuilder.Entity<Trabajo>()
+            .HasOne(t => t.Subcategoria)
+            .WithMany(s => s.Trabajos)
+            .HasForeignKey(t => t.SubcategoriaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Trabajo>()
+            .HasOne(t => t.Marca)
+            .WithMany(m => m.Trabajos)
+            .HasForeignKey(t => t.MarcaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Subcategoria>()
+            .HasIndex(s => s.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<Subcategoria>()
+            .HasIndex(s => s.Orden);
+
+        modelBuilder.Entity<Marca>()
+            .HasIndex(m => m.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<Marca>()
+            .HasIndex(m => m.Orden);
+
+        // El precio se filtra por rango en la galería de productos.
+        modelBuilder.Entity<Trabajo>()
+            .HasIndex(t => t.Precio);
 
         modelBuilder.Entity<RefreshToken>()
             .Ignore(r => r.EstaActivo);

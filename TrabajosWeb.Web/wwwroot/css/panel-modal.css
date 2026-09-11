@@ -1,0 +1,838 @@
+﻿/* ============================================================
+   Modal de alta y edición de trabajos.
+   wwwroot/css/panel-modal.css
+   ------------------------------------------------------------
+   Los colores salen de variables propias: así el modal acompaña
+   los tres temas del sitio sin reglas duplicadas.
+   ============================================================ */
+
+:root {
+    --modal-fondo: #fffdfb;
+    --modal-fondo-suave: #fdf7f2;
+    --modal-borde: rgba(194, 161, 113, .22);
+    --modal-texto: #2b2b2b;
+    --modal-tenue: #8a8078;
+    --modal-velo: rgba(46, 36, 28, .5);
+    --modal-sombra: 0 30px 70px rgba(70, 50, 35, .28);
+    --modal-peligro: #b5453a;
+}
+
+html[data-tema="oscuro"] {
+    --modal-fondo: #1c1a19;
+    --modal-fondo-suave: #232120;
+    --modal-borde: rgba(194, 161, 113, .28);
+    --modal-texto: #e8e2dc;
+    --modal-tenue: #9d948b;
+    --modal-velo: rgba(0, 0, 0, .68);
+    --modal-sombra: 0 30px 70px rgba(0, 0, 0, .6);
+}
+
+html[data-tema="bloques"] {
+    --modal-fondo: #fffdf6;
+    --modal-fondo-suave: #fff4e0;
+    --modal-borde: rgba(216, 67, 21, .2);
+    --modal-texto: #3e2723;
+    --modal-tenue: #8d6e63;
+    --modal-velo: rgba(62, 39, 35, .5);
+}
+
+
+/* --- Velo --- */
+.modal-capa {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 44px 20px;
+    background: var(--modal-velo);
+    backdrop-filter: blur(6px) saturate(1.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .35s ease, visibility 0s linear .35s;
+    overflow-y: auto;
+}
+
+    .modal-capa.abierta {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity .35s ease, visibility 0s linear 0s;
+    }
+
+body.con-modal {
+    overflow: hidden;
+}
+
+
+/* --- Caja --- */
+.modal-caja {
+    position: relative;
+    width: 100%;
+    max-width: 780px;
+    display: flex;
+    flex-direction: column;
+    color: var(--modal-texto);
+    background: var(--modal-fondo);
+    border: 1px solid var(--modal-borde);
+    border-radius: 22px;
+    box-shadow: var(--modal-sombra);
+    overflow: hidden;
+    transform: translateY(30px) scale(.97);
+    opacity: 0;
+    transition: transform .45s cubic-bezier(.16, .84, .44, 1), opacity .35s ease;
+}
+
+.modal-capa.abierta .modal-caja {
+    transform: none;
+    opacity: 1;
+}
+
+/* Filo dorado sobre el borde superior. */
+.modal-caja::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--bs-primary), transparent);
+}
+
+
+/* --- Cabecera --- */
+.modal-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 26px 32px 20px;
+    background: linear-gradient(180deg, var(--modal-fondo-suave), transparent);
+    border-bottom: 1px solid var(--modal-borde);
+}
+
+.modal-titulo {
+    margin: 0;
+    font-family: "Playfair Display", serif;
+    font-size: 1.65rem;
+    font-weight: 500;
+    letter-spacing: .2px;
+}
+
+    /* Adorno al estilo de los títulos del sitio. */
+    .modal-titulo::after {
+        content: "";
+        display: block;
+        width: 46px;
+        height: 2px;
+        margin-top: 8px;
+        background: var(--bs-primary);
+    }
+
+.modal-cerrar {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--modal-borde);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--modal-tenue);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background .3s, color .3s, border-color .3s, transform .3s;
+}
+
+    .modal-cerrar:hover {
+        background: var(--modal-peligro);
+        border-color: var(--modal-peligro);
+        color: #fff;
+        transform: rotate(90deg);
+    }
+
+
+/* --- Cuerpo --- */
+.modal-cuerpo {
+    padding: 28px 32px;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bs-primary) transparent;
+}
+
+    .modal-cuerpo::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .modal-cuerpo::-webkit-scrollbar-thumb {
+        border-radius: 8px;
+        background: var(--bs-primary);
+        opacity: .6;
+    }
+
+.modal-cargando {
+    padding: 70px 0;
+    text-align: center;
+    font-size: 32px;
+    color: var(--bs-primary);
+}
+
+.titulo-bloque {
+    margin: 0 0 4px;
+    font-family: "Playfair Display", serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--modal-texto);
+}
+
+.separador-modal {
+    margin: 28px 0;
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, var(--modal-borde), transparent);
+}
+
+.resumen-errores:not(:empty) {
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    border-left: 3px solid var(--modal-peligro);
+    border-radius: 10px;
+    background: rgba(181, 69, 58, .08);
+    color: var(--modal-peligro);
+    font-size: .92rem;
+}
+
+.opciones-linea {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 8px 0 4px;
+}
+
+    /* Las casillas quedan como pastillas, más fáciles de tocar. */
+    .opciones-linea .opcion {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0;
+        padding: 9px 18px;
+        border: 1px solid var(--modal-borde);
+        border-radius: 30px;
+        background: var(--modal-fondo-suave);
+        cursor: pointer;
+        transition: border-color .3s, background .3s;
+    }
+
+        .opciones-linea .opcion:hover {
+            border-color: var(--bs-primary);
+        }
+
+        .opciones-linea .opcion label {
+            margin: 0;
+            cursor: pointer;
+            font-size: .95rem;
+        }
+
+.grilla-precios {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 22px;
+}
+
+@media (max-width: 575.98px) {
+    .grilla-precios {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* --- Zona para elegir archivos --- */
+.zona-archivos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 34px 22px;
+    border: 2px dashed var(--modal-borde);
+    border-radius: 16px;
+    background: var(--modal-fondo-suave);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .3s, background .3s, transform .3s;
+}
+
+    .zona-archivos:hover,
+    .zona-archivos.encima {
+        border-color: var(--bs-primary);
+        border-style: solid;
+        transform: translateY(-2px);
+    }
+
+    .zona-archivos i {
+        font-size: 30px;
+        color: var(--bs-primary);
+        transition: transform .3s;
+    }
+
+    .zona-archivos:hover i {
+        transform: translateY(-3px);
+    }
+
+.zona-titulo {
+    font-family: "Playfair Display", serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+
+/* --- Miniaturas de lo que se va a subir --- */
+.previas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.previa {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--modal-fondo-suave);
+    border: 1px solid var(--modal-borde);
+    box-shadow: 0 4px 14px rgba(70, 50, 35, .12);
+    animation: entraPrevia .4s cubic-bezier(.16, .84, .44, 1) both;
+    transition: transform .3s, box-shadow .3s;
+}
+
+    .previa:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(70, 50, 35, .2);
+    }
+
+@keyframes entraPrevia {
+    from {
+        opacity: 0;
+        transform: scale(.8) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.previa img,
+.previa video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.previa-video {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    width: 23px;
+    height: 23px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: #2b2b2b;
+    font-size: 9px;
+}
+
+.previa-peso {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 4px 6px;
+    font-size: 10px;
+    letter-spacing: .3px;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(to top, rgba(0, 0, 0, .78), transparent);
+}
+
+.previa .quitar {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 23px;
+    height: 23px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .55);
+    color: #fff;
+    font-size: 10px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .3s, background .3s;
+}
+
+.previa:hover .quitar {
+    opacity: 1;
+}
+
+.previa .quitar:hover {
+    background: var(--modal-peligro);
+}
+
+.previas-resumen {
+    width: 100%;
+    margin: 6px 0 0;
+    color: var(--modal-tenue);
+}
+
+
+/* --- Barra de progreso --- */
+.modal-progreso {
+    height: 4px;
+    background: var(--modal-borde);
+    opacity: 0;
+    transition: opacity .3s;
+}
+
+    .modal-progreso.visible {
+        opacity: 1;
+    }
+
+.modal-progreso-barra {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--bs-primary), #e0c9a3, var(--bs-primary));
+    background-size: 200% 100%;
+    animation: brilloBarra 1.6s linear infinite;
+    transition: width .25s ease;
+}
+
+@keyframes brilloBarra {
+    to {
+        background-position: -200% 0;
+    }
+}
+
+
+/* --- Pie --- */
+.modal-pie {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    padding: 20px 32px;
+    background: linear-gradient(0deg, var(--modal-fondo-suave), transparent);
+    border-top: 1px solid var(--modal-borde);
+}
+
+.modal-estado {
+    margin-right: auto;
+    font-size: .9rem;
+    color: var(--modal-tenue);
+}
+
+.modal-pie .boton:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+
+/* --- Celular: el modal ocupa toda la pantalla --- */
+@media (max-width: 575.98px) {
+    .modal-capa {
+        padding: 0;
+    }
+
+    .modal-caja {
+        min-height: 100vh;
+        border: none;
+        border-radius: 0;
+    }
+
+    .modal-cabecera,
+    .modal-cuerpo,
+    .modal-pie {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .modal-cuerpo {
+        max-height: none;
+    }
+
+    .modal-pie {
+        position: sticky;
+        bottom: 0;
+        background: var(--modal-fondo);
+    }
+
+    .previa .quitar {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-capa,
+    .modal-caja,
+    .modal-cerrar,
+    .previa,
+    .zona-archivos {
+        transition: none;
+        animation: none;
+    }
+
+    .modal-progreso-barra {
+        animation: none;
+    }
+}
+
+/* ============================================================
+   AGREGAR AL FINAL DE wwwroot/css/panel-modal.css
+   Botones del pie del modal, al estilo de los del panel.
+   ============================================================ */
+
+.modal-pie {
+    gap: 16px;
+    padding: 22px 32px;
+}
+
+    /* --- Base común --- */
+    .modal-pie .boton,
+    .modal-pie .modal-cancelar,
+    .modal-pie .modal-guardar {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 13px 30px;
+        border-radius: 40px;
+        font-family: "Playfair Display", serif;
+        font-size: .95rem;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        line-height: 1;
+        cursor: pointer;
+        overflow: hidden;
+        transition: transform .3s cubic-bezier(.16, .84, .44, 1), box-shadow .3s, background .3s, color .3s, border-color .3s;
+    }
+
+    /* --- Cancelar: contorno discreto --- */
+    .modal-pie .modal-cancelar {
+        border: 1.5px solid var(--modal-borde);
+        background: transparent;
+        color: var(--modal-tenue);
+    }
+
+        .modal-pie .modal-cancelar:hover:not(:disabled) {
+            border-color: var(--modal-peligro);
+            color: var(--modal-peligro);
+            background: rgba(181, 69, 58, .06);
+            transform: translateY(-2px);
+        }
+
+        .modal-pie .modal-cancelar:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+    /* --- Guardar: sólido dorado con brillo al pasar --- */
+    .modal-pie .modal-guardar {
+        border: none;
+        background: linear-gradient(135deg, var(--bs-primary) 0%, #b08d5e 100%);
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(150, 115, 70, .32);
+    }
+
+        /* Destello que cruza el botón al acercar el mouse. */
+        .modal-pie .modal-guardar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .45), transparent);
+            transform: skewX(-20deg);
+            transition: left .7s ease;
+        }
+
+        .modal-pie .modal-guardar:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(150, 115, 70, .45);
+        }
+
+            .modal-pie .modal-guardar:hover:not(:disabled)::after {
+                left: 130%;
+            }
+
+        .modal-pie .modal-guardar:active:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(150, 115, 70, .35);
+        }
+
+        .modal-pie .modal-guardar i {
+            font-size: .9em;
+            transition: transform .3s;
+        }
+
+        .modal-pie .modal-guardar:hover:not(:disabled) i {
+            transform: scale(1.15);
+        }
+
+        /* --- Mientras sube: el botón deja de invitar --- */
+        .modal-pie .boton:disabled,
+        .modal-pie .modal-cancelar:disabled,
+        .modal-pie .modal-guardar:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+            .modal-pie .modal-guardar:disabled::after {
+                display: none;
+            }
+
+        /* --- Foco por teclado, para quien no usa mouse --- */
+        .modal-pie .modal-cancelar:focus-visible,
+        .modal-pie .modal-guardar:focus-visible {
+            outline: 2px solid var(--bs-primary);
+            outline-offset: 3px;
+        }
+
+/* --- Celular: ocupan el ancho y Guardar queda primero --- */
+@media (max-width: 575.98px) {
+    .modal-pie {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .modal-estado {
+        width: 100%;
+        margin: 0 0 4px;
+        text-align: center;
+    }
+
+    .modal-pie .modal-cancelar,
+    .modal-pie .modal-guardar {
+        flex: 1 1 0;
+        padding: 14px 18px;
+        letter-spacing: .8px;
+    }
+
+    .modal-pie .modal-guardar {
+        order: 2;
+    }
+
+    .modal-pie .modal-cancelar {
+        order: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-pie .modal-cancelar,
+    .modal-pie .modal-guardar,
+    .modal-pie .modal-guardar::after,
+    .modal-pie .modal-guardar i {
+        transition: none;
+    }
+}
+
+/* ============================================================
+   AGREGAR AL FINAL DE wwwroot/css/panel-modal.css
+   Archivos ya cargados y tacho para eliminar arrastrando.
+   ============================================================ */
+
+/* --- Los ya guardados, del mismo tamaño que las miniaturas nuevas --- */
+.modal-cuerpo .medios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.modal-cuerpo .medio {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    flex: 0 0 96px;
+    margin: 0;
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--modal-fondo-suave);
+    border: 1px solid var(--modal-borde);
+    box-shadow: 0 4px 14px rgba(70, 50, 35, .12);
+    cursor: grab;
+    transition: transform .3s, box-shadow .3s, opacity .3s;
+}
+
+    .modal-cuerpo .medio:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(70, 50, 35, .2);
+    }
+
+    .modal-cuerpo .medio img,
+    .modal-cuerpo .medio video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        border-radius: 0;
+        pointer-events: none;
+    }
+
+    /* El formulario de borrado no ocupa lugar: solo posiciona la cruz. */
+    .modal-cuerpo .medio form {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        margin: 0;
+    }
+
+    .modal-cuerpo .medio .quitar {
+        width: 23px;
+        height: 23px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, .55);
+        color: #fff;
+        font-size: 10px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity .3s, background .3s;
+    }
+
+    .modal-cuerpo .medio:hover .quitar {
+        opacity: 1;
+    }
+
+    .modal-cuerpo .medio .quitar:hover {
+        background: var(--modal-peligro);
+    }
+
+    /* --- Mientras se arrastra --- */
+    .previa.arrastrando,
+    .modal-cuerpo .medio.arrastrando {
+        opacity: .4;
+        transform: scale(.9);
+        cursor: grabbing;
+    }
+
+.previa {
+    cursor: grab;
+}
+
+/* --- Tacho --- */
+.tacho {
+    position: absolute;
+    left: 50%;
+    bottom: 92px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 150px;
+    height: 118px;
+    padding: 14px;
+    border: 2px dashed var(--modal-borde);
+    border-radius: 18px;
+    background: var(--modal-fondo);
+    box-shadow: 0 14px 34px rgba(70, 50, 35, .22);
+    color: var(--modal-tenue);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 16px) scale(.9);
+    transition: opacity .3s ease, transform .3s cubic-bezier(.16, .84, .44, 1), visibility 0s linear .3s, border-color .25s, background .25s, color .25s;
+    pointer-events: none;
+}
+
+    .tacho.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0) scale(1);
+        transition: opacity .3s ease, transform .3s cubic-bezier(.16, .84, .44, 1), visibility 0s linear 0s, border-color .25s, background .25s, color .25s;
+        pointer-events: auto;
+    }
+
+    /* Al pasar por encima: el tacho se abre y se pone rojo. */
+    .tacho.encima {
+        border-color: var(--modal-peligro);
+        border-style: solid;
+        background: rgba(181, 69, 58, .1);
+        color: var(--modal-peligro);
+        transform: translate(-50%, -6px) scale(1.08);
+    }
+
+    .tacho i {
+        font-size: 32px;
+        transition: transform .25s;
+    }
+
+.tacho-abierto {
+    display: none;
+}
+
+.tacho.encima .tacho-cerrado {
+    display: none;
+}
+
+.tacho.encima .tacho-abierto {
+    display: block;
+    animation: tapaTacho .4s ease;
+}
+
+@keyframes tapaTacho {
+    0% {
+        transform: rotate(-14deg) translateY(-3px);
+    }
+
+    60% {
+        transform: rotate(6deg);
+    }
+
+    100% {
+        transform: none;
+    }
+}
+
+.tacho-texto {
+    font-size: 11px;
+    line-height: 1.3;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+}
+
+/* En el celular no hay arrastre cómodo: la cruz queda siempre visible. */
+@media (max-width: 767.98px) {
+    .modal-cuerpo .medio .quitar,
+    .previa .quitar {
+        opacity: 1;
+    }
+
+    .tacho {
+        bottom: 130px;
+        width: 130px;
+        height: 104px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tacho,
+    .tacho i,
+    .modal-cuerpo .medio {
+        transition: none;
+        animation: none;
+    }
+}

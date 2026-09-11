@@ -28,6 +28,7 @@
                     <h1 class="display-1 mb-4 animated slideInLeft">El Gato Negro</h1>
                     <p class="fs-5 mb-4 animated slideInLeft">
                         Cortes, color, brushing y tratamientos. Mirá lo que hicimos y contanos qué tenés en mente.
+                        Productos de primera calidad y un equipo de profesionales que te va a asesorar para que tu pelo luzca increíble.
                     </p>
                     <div class="row g-4 animated slideInLeft">
                         <div class="col-md-6">
@@ -145,15 +146,15 @@
                             @if (esProducto)
                             {
                                 <a asp-action="Index" asp-route-categoria="@servicio.Slug"
+                                   data-slug="@servicio.Slug"
                                    class="btn btn-primary text-uppercase px-4 py-2 btn-efecto-producto filtro-externo">
-                                    <span class="text-center w-100 d-inline-block">
-                                        <i class="fa-solid fa-bag-shopping me-2"></i>Galería de Productos
-                                    </span>
+                                    Ver Productos
                                 </a>
                             }
                             else
                             {
                                 <a asp-action="Index" asp-route-categoria="@servicio.Slug"
+                                   data-slug="@servicio.Slug"
                                    class="btn btn-primary text-uppercase px-4 py-2 filtro-externo">
                                     Ver trabajos
                                 </a>
@@ -173,17 +174,14 @@
             <h1 class="mb-5">Nuestros trabajos</h1>
         </div>
 
-        @* Este bloque se reemplaza por fetch al filtrar: ver galeria.js *@
-        <div id="galeria-contenido">
-            <partial name="_GaleriaGrilla" model="Model" />
-        </div>
+        <partial name="_GaleriaGrilla" model="Model" />
     </div>
 </div>
 
 @section Estilos {
     <style>
         /* Fondo sutilmente diferenciado para la tarjeta de Productos,
-           manteniendo los efectos y el botón sólido. */
+                           manteniendo los efectos y el botón sólido. */
         .service-item-producto {
             background-color: #faf9f6;
             transition: all 0.3s ease;
@@ -206,5 +204,6 @@
 }
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
     <script src="~/js/galeria.js" asp-append-version="true"></script>
 }

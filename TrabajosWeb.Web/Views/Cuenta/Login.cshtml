@@ -3,50 +3,54 @@
     ViewData["Title"] = "Ingresar";
 }
 
-<section class="contenedor seccion">
-    <div class="vidrio" style="max-width:420px;margin-inline:auto;padding:40px;">
-        <h1 class="centro" style="font-size:1.8rem;margin-bottom:32px;">Ingresar</h1>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 p-4 p-md-5">
+                <h1 class="text-center text-primary mb-4" style="font-size: 1.8rem;">Ingresar</h1>
 
-        <form asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
-            @Html.AntiForgeryToken()
+                <form asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+                    @Html.AntiForgeryToken()
 
-            <div asp-validation-summary="ModelOnly"></div>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="campo">
-                <label asp-for="NombreUsuario">Usuario</label>
-                <input asp-for="NombreUsuario" class="entrada" autocomplete="username" autofocus />
-                <span asp-validation-for="NombreUsuario"></span>
-            </div>
+                    <div class="mb-3">
+                        <label asp-for="NombreUsuario" class="form-label">Usuario</label>
+                        <input asp-for="NombreUsuario" class="form-control" autocomplete="username" autofocus />
+                        <span asp-validation-for="NombreUsuario" class="text-danger small"></span>
+                    </div>
 
-            <div class="campo">
-                <label asp-for="Password">Contraseña</label>
-                <div class="con-ojo">
-                    <input asp-for="Password" class="entrada" type="password"
-                           autocomplete="current-password" id="campoPassword" />
-                    <button type="button" class="ojo" data-ojo="campoPassword"
-                            aria-label="Mostrar contraseña" aria-pressed="false">
-                        <i class="fa-regular fa-eye"></i>
+                    <div class="mb-4">
+                        <label asp-for="Password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <input asp-for="Password" class="form-control" type="password"
+                                   autocomplete="current-password" id="campoPassword" />
+                            <button type="button" class="btn btn-outline-secondary" data-ojo="campoPassword"
+                                    aria-label="Mostrar contraseña" aria-pressed="false">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i>Ingresar
                     </button>
-                </div>
-                <span asp-validation-for="Password"></span>
+                </form>
             </div>
-
-            <button type="submit" class="boton boton-primario boton-ancho">
-                <i class="fa-solid fa-right-to-bracket"></i>Ingresar
-            </button>
-        </form>
+        </div>
     </div>
-</section>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        (function () {
-            document.querySelectorAll('[data-ojo]').forEach(function (boton) {
+        (function() {
+            document.querySelectorAll('[data-ojo]').forEach(function(boton) {
                 var campo = document.getElementById(boton.dataset.ojo);
                 if (!campo) return;
 
-                boton.addEventListener('click', function () {
+                boton.addEventListener('click', function() {
                     var visible = campo.type === 'text';
 
                     campo.type = visible ? 'password' : 'text';

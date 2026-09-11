@@ -1,7 +1,15 @@
-﻿/* Ajustes propios de Gato Negro sobre la plantilla Salone.
-   Este archivo se carga último: lo que esté acá gana. */
+﻿/* ============================================================
+   El Gato Negro — ajustes propios sobre la plantilla Salone
+   ------------------------------------------------------------
+   Este archivo se carga DESPUES de style.css: lo que este aca gana.
+   Cada selector aparece una sola vez. Si algo no se ve como
+   esperabas, buscalo aca: no esta declarado en dos lugares.
+   ============================================================ */
 
+/* Ajustes propios de Gato Negro sobre la plantilla Salone.
+   Este archivo se carga último: lo que esté acá gana. */
 /* --- Botón flotante de WhatsApp --- */
+
 .wa-flotante {
     position: fixed;
     left: 45px;
@@ -25,14 +33,8 @@
         transform: scale(1.08);
     }
 
-@media (max-width: 575.98px) {
-    .wa-flotante {
-        left: 20px;
-        bottom: 20px;
-    }
-}
-
 /* --- Filtros de categoría --- */
+
 .filtros {
     display: flex;
     flex-wrap: wrap;
@@ -67,21 +69,10 @@
         margin-right: 6px;
     }
 
-/* --- Celdas de la galería --- */
-.gallery .gallery-item {
-    height: 320px;
-}
-
-    .gallery .gallery-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-@media (max-width: 767.98px) {
-    .gallery .gallery-item {
-        height: 260px;
-    }
+.gallery .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .gallery .pieza-vacia {
@@ -96,6 +87,7 @@
 }
 
 /* --- Pie de cada pieza --- */
+
 .pieza-pie {
     position: absolute;
     left: 0;
@@ -122,8 +114,8 @@
 }
 
 /* --- Marcas sobre la foto --- */
-.marca-destacado,
-.marca-video {
+
+.marca-destacado, .marca-video {
     position: absolute;
     top: 14px;
     z-index: 2;
@@ -150,6 +142,7 @@
     }
 
 /* --- Galería vacía --- */
+
 .galeria-vacia {
     text-align: center;
     padding: 60px 20px;
@@ -160,7 +153,9 @@
         color: var(--bs-primary);
         margin-bottom: 20px;
     }
+
 /* --- Detalle del trabajo --- */
+
 .medio-detalle.gallery-item {
     height: auto;
 }
@@ -170,378 +165,49 @@
         object-fit: initial;
     }
 
-.panel-consulta {
-    position: sticky;
-    top: 110px;
+.service .service-item .btn {
+    margin-top: auto;
 }
 
-@media (max-width: 991.98px) {
-    .panel-consulta {
-        position: static;
-    }
+.service .service-item i {
+    min-height: 48px;
 }
 
-/* --- Tarjetas de servicios --- */
-.service .service-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-    .service .service-item .btn {
-        margin-top: auto;
-    }
-
-    .service .service-item i {
-        min-height: 48px;
-    }
 /* --- Logo del gato --- */
+
 .logo-gato {
     height: 1.1em;
     width: auto;
 }
 
 .logo-gato-pie {
-    /* El pie es oscuro y la silueta es negra: la aclaramos al color de acento */
     filter: brightness(0) saturate(100%) invert(72%) sepia(24%) saturate(628%) hue-rotate(357deg) brightness(90%) contrast(88%);
 }
 
-/* --- Carrusel del hero ---
-   Las fotos verticales estiran la fila. Se recorta a una altura fija
-   y el texto queda centrado al lado. */
-.header-carousel,
-.header-carousel .owl-stage-outer,
-.header-carousel .owl-stage,
-.header-carousel .owl-item {
+.header-carousel img {
+    width: 100%;
     height: 620px;
+    object-fit: cover;
+    object-position: center 25%;
 }
-
-    .header-carousel img {
-        width: 100%;
-        height: 620px;
-        object-fit: cover;
-        object-position: center 25%;
-    }
-
-.hero-header .hero-header-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 620px;
-}
-
-@media (max-width: 991.98px) {
-    .header-carousel,
-    .header-carousel .owl-stage-outer,
-    .header-carousel .owl-stage,
-    .header-carousel .owl-item,
-    .header-carousel img {
-        height: 420px;
-    }
-
-    .hero-header .hero-header-text {
-        min-height: auto;
-    }
-}
-
-/* ============================================================
-   PEGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
-   ============================================================ */
-
-/* --- Precios y ofertas sobre la pieza --- */
-
-/* Las marcas de la derecha se apilan: puede haber oferta y videos a la vez. */
-.marcas-derecha {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-}
-
-    /* Anulamos el posicionamiento propio: ahora lo maneja el contenedor. */
-    .marcas-derecha .marca-video {
-        position: static;
-        top: auto;
-        right: auto;
-    }
-
-.marca-oferta {
-    padding: 5px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    color: #fff;
-    background: #1e8449;
-}
-
-.pieza-precio {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 8px;
-}
-
-.precio-actual {
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    line-height: 1.1;
-}
-
-.precio-anterior {
-    font-size: 15px;
-    color: rgba(255, 255, 255, .7);
-    text-decoration: line-through;
-}
-
-.pieza-oferta {
-    display: block;
-    margin-top: 4px;
-    font-size: 13px;
-    color: var(--bs-primary);
-}
-
-/* En las celdas chicas el precio compite con el título: lo achicamos. */
-@media (max-width: 575.98px) {
-    .precio-actual {
-        font-size: 19px;
-    }
-
-    .marca-oferta {
-        font-size: 12px;
-        padding: 4px 9px;
-    }
-}
-
-/* ============================================================
-   PEGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
-   ============================================================ */
-
-/* --- Precios y ofertas sobre la pieza --- */
-
-/* Las marcas de la derecha se apilan: puede haber oferta y videos a la vez. */
-.marcas-derecha {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-}
-
-    /* Anulamos el posicionamiento propio: ahora lo maneja el contenedor. */
-    .marcas-derecha .marca-video {
-        position: static;
-        top: auto;
-        right: auto;
-    }
-
-.marca-oferta {
-    padding: 5px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    color: #fff;
-    background: #1e8449;
-}
-
-.pieza-precio {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 8px;
-}
-
-.precio-actual {
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    line-height: 1.1;
-}
-
-.precio-anterior {
-    font-size: 15px;
-    color: rgba(255, 255, 255, .7);
-    text-decoration: line-through;
-}
-
-.pieza-oferta {
-    display: block;
-    margin-top: 4px;
-    font-size: 13px;
-    color: var(--bs-primary);
-}
-
-@media (max-width: 575.98px) {
-    .precio-actual {
-        font-size: 19px;
-    }
-
-    .marca-oferta {
-        font-size: 12px;
-        padding: 4px 9px;
-    }
-}
-
-
-/* --- Filtro de la galería sin recarga --- */
-
-/* Entrada escalonada de cada pieza. Reemplaza a wow, que no vuelve a
-   aplicarse sobre el contenido insertado por fetch. */
-@keyframes entraPieza {
-    from {
-        opacity: 0;
-        transform: translateY(18px);
-    }
-
-    to {
-        opacity: 1;
-        transform: none;
-    }
-}
-
-.entra {
-    animation: entraPieza .45s ease both;
-}
-
-/* Mientras llega la respuesta, el bloque se atenúa y no acepta clics. */
-#galeria-contenido {
-    position: relative;
-    transition: opacity .2s;
-}
-
-    #galeria-contenido.cargando {
-        opacity: .35;
-        pointer-events: none;
-    }
-
-        #galeria-contenido.cargando::after {
-            content: "";
-            position: absolute;
-            top: 120px;
-            left: 50%;
-            width: 42px;
-            height: 42px;
-            margin-left: -21px;
-            border: 3px solid rgba(0, 0, 0, .12);
-            border-top-color: var(--bs-primary);
-            border-radius: 50%;
-            animation: giraFiltro .7s linear infinite;
-        }
-
-@keyframes giraFiltro {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Quien prefiera menos movimiento, no lo tiene. */
-@media (prefers-reduced-motion: reduce) {
-    .entra {
-        animation: none;
-    }
-}
-
-
-/* --- Ficha de datos del detalle --- */
-.ficha {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 28px;
-    padding: 18px 0;
-    border-top: 1px solid rgba(0, 0, 0, .08);
-    border-bottom: 1px solid rgba(0, 0, 0, .08);
-}
-
-.ficha-dato {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--bs-dark);
-}
-
-    .ficha-dato i {
-        color: var(--bs-primary);
-    }
-
-    .ficha-dato.destacado {
-        color: var(--bs-primary);
-    }
-
-
-/* --- Precio en el panel lateral del detalle --- */
-.precio-panel {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.precio-panel-actual {
-    font-family: "Playfair Display", serif;
-    font-size: 34px;
-    font-weight: 500;
-    color: var(--bs-dark);
-    line-height: 1.1;
-}
-
-.precio-panel-anterior {
-    font-size: 18px;
-    color: rgba(0, 0, 0, .45);
-    text-decoration: line-through;
-}
-
-.precio-panel-nota {
-    margin-top: 8px;
-    margin-bottom: 0;
-    font-size: 14px;
-    color: #1e8449;
-}
-/* ============================================================
-   PEGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
-   ============================================================ */
 
 /* --- Carrusel del hero con datos del trabajo --- */
-.header-carousel,
-.header-carousel .owl-stage-outer,
-.header-carousel .owl-stage,
-.header-carousel .owl-item {
+
+.header-carousel, .header-carousel .owl-stage-outer, .header-carousel .owl-stage, .header-carousel .owl-item {
     height: 620px;
 }
 
-.hero-slide {
-    position: relative;
-    display: block;
+.hero-slide img {
+    width: 100%;
     height: 620px;
-    overflow: hidden;
-    text-decoration: none;
+    object-fit: cover;
+    object-position: center 25%;
+    transition: transform 6s ease;
 }
 
-    .hero-slide img {
-        width: 100%;
-        height: 620px;
-        object-fit: cover;
-        object-position: center 25%;
-        transition: transform 6s ease;
-    }
-
-    .hero-slide:hover img {
-        transform: scale(1.06);
-    }
+.hero-slide:hover img {
+    transform: scale(1.06);
+}
 
 .hero-etiqueta {
     position: absolute;
@@ -565,18 +231,28 @@
     right: 0;
     bottom: 0;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     padding: 32px 30px 28px;
     color: #fff;
-    background: linear-gradient(to top, rgba(0, 0, 0, .88) 25%, rgba(0, 0, 0, 0));
+    background: linear-gradient(to top, rgba(0, 0, 0, .92) 20%, rgba(0, 0, 0, .55) 55%, rgba(0, 0, 0, 0));
 }
 
 .hero-categoria {
-    display: block;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    margin-bottom: 12px;
+    padding: 6px 16px;
+    border-radius: 30px;
+    background: var(--bs-primary);
+    color: var(--bs-dark);
+    font-size: 12px;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: var(--bs-primary);
-    margin-bottom: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
 }
 
 .hero-titulo {
@@ -645,17 +321,20 @@
 }
 
 @media (max-width: 991.98px) {
-    .header-carousel,
-    .header-carousel .owl-stage-outer,
-    .header-carousel .owl-stage,
-    .header-carousel .owl-item,
-    .hero-slide,
-    .hero-slide img {
-        height: 460px;
+    .panel-consulta {
+        position: static;
+    }
+
+    .header-carousel, .header-carousel .owl-stage-outer, .header-carousel .owl-stage, .header-carousel .owl-item, .header-carousel img {
+        height: 420px;
     }
 
     .hero-header .hero-header-text {
         min-height: auto;
+    }
+
+    .header-carousel, .header-carousel .owl-stage-outer, .header-carousel .owl-stage, .header-carousel .owl-item, .hero-slide, .hero-slide img {
+        height: 460px;
     }
 
     .hero-titulo {
@@ -667,8 +346,8 @@
     }
 }
 
-
 /* --- Precios y ofertas sobre la pieza de la galería --- */
+
 .marcas-derecha {
     position: absolute;
     top: 14px;
@@ -681,6 +360,7 @@
 }
 
     /* Anulamos el posicionamiento propio: ahora lo maneja el contenedor. */
+
     .marcas-derecha .marca-video {
         position: static;
         top: auto;
@@ -727,6 +407,11 @@
 }
 
 @media (max-width: 575.98px) {
+    .wa-flotante {
+        left: 20px;
+        bottom: 20px;
+    }
+
     .precio-actual {
         font-size: 19px;
     }
@@ -737,9 +422,10 @@
     }
 }
 
-
 /* --- Bordes redondeados y sombras --- */
+
 .gallery .gallery-item {
+    height: 320px;
     border-radius: 14px;
     box-shadow: 0 8px 26px rgba(0, 0, 0, .12);
     transition: box-shadow .4s, transform .4s;
@@ -751,40 +437,66 @@
     }
 
 .hero-slide {
+    position: relative;
+    display: block;
+    height: 620px;
+    overflow: hidden;
+    text-decoration: none;
     border-radius: 14px;
 }
 
-.service .service-item {
-    border-radius: 14px;
-    background: rgba(255, 255, 255, .55);
-    backdrop-filter: blur(4px);
-    transition: box-shadow .4s, transform .4s, background .4s;
-}
-
-    .service .service-item:hover {
-        background: rgba(255, 255, 255, .92);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, .12);
-        transform: translateY(-5px);
-    }
-
-.panel-consulta,
-.medio-detalle.gallery-item {
+.panel-consulta, .medio-detalle.gallery-item {
     border-radius: 14px;
 }
 
 .panel-consulta {
+    position: sticky;
+    top: 110px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, .10);
 }
 
+/* --- Revelado de las piezas de la galería ---
+   Tres capas que entran juntas pero a distinto ritmo: la tarjeta sube y
+   se enfoca, la foto suelta un zoom lento, y el texto del pie llega
+   último. El retraso escalonado lo pone la vista en cada columna. */
 
-/* --- Filtro de la galería sin recarga --- */
-
-/* Entrada escalonada de cada pieza. Reemplaza a wow, que no vuelve a
-   aplicarse sobre el contenido insertado por fetch. */
-@keyframes entraPieza {
+@keyframes revelaPieza {
     from {
         opacity: 0;
-        transform: translateY(18px);
+        transform: translateY(22px) scale(1.03);
+        filter: blur(16px) saturate(1.6);
+    }
+
+    45% {
+        opacity: .8;
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+        filter: blur(0) saturate(1);
+    }
+}
+
+@keyframes acercaFoto {
+    from {
+        transform: scale(1.12);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes subePie {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    22% {
+        opacity: 0;
+        transform: translateY(14px);
     }
 
     to {
@@ -794,51 +506,36 @@
 }
 
 .entra {
-    animation: entraPieza .45s ease both;
+    animation: revelaPieza 1.25s cubic-bezier(.16, .84, .44, 1) both;
 }
+
+    /* La foto acompaña con un acercamiento más largo, para que el
+       movimiento siga vivo cuando la tarjeta ya se asentó. */
+    .entra .gallery-item img,
+    .entra .producto-foto img {
+        animation: acercaFoto 2s cubic-bezier(.16, .84, .44, 1) both;
+        animation-delay: inherit;
+    }
+
+    /* El texto entra un poco después, así se lee como algo que aparece
+       sobre la foto y no junto con ella. */
+    .entra .pieza-pie,
+    .entra .producto-cuerpo {
+        animation: subePie 1.4s cubic-bezier(.16, .84, .44, 1) both;
+        animation-delay: inherit;
+    }
 
 #galeria-contenido {
     position: relative;
-    transition: opacity .2s;
+    transition: opacity .5s ease;
 }
 
     #galeria-contenido.cargando {
-        opacity: .35;
         pointer-events: none;
     }
 
-        #galeria-contenido.cargando::after {
-            content: "";
-            position: absolute;
-            top: 120px;
-            left: 50%;
-            width: 42px;
-            height: 42px;
-            margin-left: -21px;
-            border: 3px solid rgba(0, 0, 0, .12);
-            border-top-color: var(--bs-primary);
-            border-radius: 50%;
-            animation: giraFiltro .7s linear infinite;
-        }
-
-@keyframes giraFiltro {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .entra {
-        animation: none;
-    }
-
-    .hero-slide img {
-        transition: none;
-    }
-}
-
-
 /* --- Ficha de datos del detalle --- */
+
 .ficha {
     display: flex;
     flex-wrap: wrap;
@@ -866,8 +563,8 @@
         color: var(--bs-primary);
     }
 
-
 /* --- Precio en el panel lateral del detalle --- */
+
 .precio-panel {
     display: flex;
     align-items: baseline;
@@ -896,12 +593,8 @@
     color: #1e8449;
 }
 
-/* ============================================================
-   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
-   (va después del bloque anterior, no lo reemplaza)
-   ============================================================ */
-
 /* --- Transición entre vistas --- */
+
 #contenido {
     transition: opacity .35s ease, transform .35s ease;
 }
@@ -917,8 +610,8 @@
 }
 
 /* El pie acompaña, más discreto. */
-.pagina-entrando .footer,
-.pagina-saliendo .footer {
+
+.pagina-entrando .footer, .pagina-saliendo .footer {
     opacity: 0;
 }
 
@@ -926,8 +619,8 @@
     transition: opacity .35s ease;
 }
 
-
 /* --- Botón volver --- */
+
 .volver {
     display: inline-flex;
     align-items: center;
@@ -972,30 +665,13 @@
 }
 
 /* Sobre fondos oscuros. */
-.bg-dark .volver,
-.footer .volver {
+
+.bg-dark .volver, .footer .volver {
     color: var(--bs-white);
 }
 
-@media (prefers-reduced-motion: reduce) {
-    #contenido,
-    .footer,
-    .volver,
-    .volver-flecha {
-        transition: none;
-    }
-
-    .pagina-entrando #contenido {
-        opacity: 1;
-        transform: none;
-    }
-}
-
-/* ============================================================
-   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
-   ============================================================ */
-
 /* --- Vista tienda: categoría Productos --- */
+
 .tienda {
     padding: 40px 28px;
     border-radius: 20px;
@@ -1140,6 +816,10 @@
 }
 
 @media (max-width: 767.98px) {
+    .gallery .gallery-item {
+        height: 260px;
+    }
+
     .tienda {
         padding: 26px 14px;
         border-radius: 14px;
@@ -1154,41 +834,37 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .producto-card,
-    .producto-foto img,
-    .producto-vermas i {
-        transition: none;
-    }
-}
-
-/* ============================================================
-   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
-   Va después de todo lo anterior: al cargarse último, gana.
-   ============================================================ */
-
 /* --- Fondo suave para la sección Servicios --- */
-
 /* La franja completa toma un crema apenas rosado, para que las tarjetas
    no floten sobre blanco. */
+
 .service {
     background: linear-gradient(180deg, #fdfaf7 0%, #fbf5f2 100%);
 }
 
     .service .service-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        border-radius: 14px;
         background: linear-gradient(160deg, #ffffff 0%, #fdf8f5 100%);
+        backdrop-filter: blur(4px);
+        transition: box-shadow .4s, transform .4s, background .4s;
         border-color: rgba(194, 161, 113, .22) !important;
         box-shadow: 0 4px 18px rgba(120, 90, 70, .06);
     }
 
         .service .service-item:hover {
             background: linear-gradient(160deg, #ffffff 0%, #fbf1ec 100%);
-            border-color: rgba(194, 161, 113, .45) !important;
             box-shadow: 0 16px 38px rgba(120, 90, 70, .14);
+            transform: translateY(-5px);
+            border-color: rgba(194, 161, 113, .45) !important;
         }
 
         /* La tarjeta de Productos, un punto más cálida que el resto.
    La especificidad de estos selectores gana sobre el bloque de la vista. */
+
         .service .service-item.service-item-producto {
             background: linear-gradient(160deg, #fdf6f3 0%, #faeee9 100%);
         }
@@ -1198,6 +874,7 @@
             }
 
         /* El ícono queda sobre un círculo suave, así no flota solo. */
+
         .service .service-item > i {
             display: inline-flex;
             align-items: center;
@@ -1215,8 +892,699 @@
         }
 
 @media (prefers-reduced-motion: reduce) {
-    .service .service-item,
-    .service .service-item > i {
+    .entra,
+    .entra .gallery-item img,
+    .entra .producto-foto img,
+    .entra .pieza-pie,
+    .entra .producto-cuerpo {
+        animation: none;
+    }
+
+    .hero-slide img {
+        transition: none;
+    }
+
+    #contenido, .footer, .volver, .volver-flecha {
+        transition: none;
+    }
+
+    .pagina-entrando #contenido {
+        opacity: 1;
+        transform: none;
+    }
+
+    .producto-card, .producto-foto img, .producto-vermas i {
+        transition: none;
+    }
+
+    .service .service-item, .service .service-item > i {
+        transition: none;
+    }
+}
+
+/* Corrección visual para el selector de temas en el Layout Salone */
+
+.temas {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tema-opcion {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    padding: 0;
+    outline: none;
+    transition: transform 0.2s;
+}
+
+    .tema-opcion:hover {
+        transform: scale(1.15);
+    }
+
+.tema-claro {
+    background-color: #f8f9fa;
+}
+
+.tema-oscuro {
+    background-color: #212529;
+}
+
+.tema-bloques {
+    background: linear-gradient(135deg, #ffc107 50%, #0dcaf0 50%);
+}
+
+/* --- Definición de Temas para _LayoutSalone --- */
+/* Tema Claro (Por defecto) */
+
+html[data-tema="claro"] {
+    --bs-body-bg: #f8f9fa;
+    --bs-body-color: #212529;
+}
+
+    html[data-tema="claro"] body {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+
+/* Tema Oscuro */
+
+html[data-tema="oscuro"] {
+    --bs-body-bg: #121212;
+    --bs-body-color: #e0e0e0;
+}
+
+    html[data-tema="oscuro"] body {
+        background-color: var(--bs-body-bg) !important;
+        color: var(--bs-body-color) !important;
+    }
+
+    html[data-tema="oscuro"] .container-fluid.bg-light, html[data-tema="oscuro"] .navbar, html[data-tema="oscuro"] .dropdown-menu {
+        background-color: #1a1a1a !important;
+        color: #e0e0e0 !important;
+    }
+
+    html[data-tema="oscuro"] .navbar-light .navbar-nav .nav-link {
+        color: #cccccc !important;
+    }
+
+    html[data-tema="oscuro"] .card, html[data-tema="oscuro"] .vidrio {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border-color: #333 !important;
+    }
+
+/* Tema Bloques de color */
+
+html[data-tema="bloques"] {
+    --bs-body-bg: #fff8e1;
+    --bs-body-color: #3e2723;
+}
+
+    html[data-tema="bloques"] body {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+
+    html[data-tema="bloques"] .container-fluid.bg-light {
+        background-color: #ffe0b2 !important;
+    }
+
+    html[data-tema="bloques"] .navbar-brand {
+        background-color: #d84315 !important;
+    }
+
+/* --- Estilo global de bordes redondeados (Soft UI / Moderno) --- */
+/* Tarjetas, contenedores de vidrio, bloques y modales */
+
+.vidrio, .card, .producto-card, .gallery-item, .service-item, .tabla-envoltorio, .aviso, .dropdown-menu {
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+/* Botones y controles de formulario */
+
+.btn, .boton, input.form-control, select.form-control, textarea.form-control, .form-control {
+    border-radius: 10px !important;
+}
+
+/* Imágenes dentro de tarjetas y galerías */
+
+.producto-foto img, .gallery-item img, .miniatura-fila {
+    border-radius: 12px;
+}
+
+/* Etiquetas (Badges) */
+
+.etiqueta, .marca-destacado, .marca-oferta, .marca-video, .producto-destacado, .producto-off {
+    border-radius: 20px !important;
+}
+
+/* Barra de filtros / solapas */
+
+.filtros .filtro {
+    border-radius: 30px !important;
+}
+
+/* Redondeo específico para las tarjetas de resumen del panel */
+
+.resumen .vidrio, .panel-cabecera .fila .boton, .tabla-envoltorio {
+    border-radius: 16px !important;
+}
+
+    /* Bordes para la tabla y sus contenedores internos */
+
+    .tabla-envoltorio table {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+/* Forzar esquinas redondeadas en las tarjetas del panel */
+
+.row.g-4.mb-5 .border {
+    border-radius: 1rem !important;
+}
+
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+    .tabla th, .tabla td {
+        padding: 14px 16px;
+        vertical-align: middle;
+    }
+
+    .tabla th {
+        font-weight: 600;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .tabla td {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+/* --- Corrección definitiva de Tablas y Formularios del Panel --- */
+
+.tabla-envoltorio {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+    .tabla-envoltorio table, table.tabla {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 0 !important;
+        background: transparent !important;
+    }
+
+        .tabla-envoltorio th, .tabla-envoltorio td, table.tabla th, table.tabla td {
+            padding: 16px 20px !important;
+            vertical-align: middle !important;
+            text-align: left !important;
+            background: transparent !important;
+        }
+
+        .tabla-envoltorio th, table.tabla th {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .tabla-envoltorio td, table.tabla td {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        }
+
+/* Campos de texto y formularios de edición */
+
+.campo {
+    margin-bottom: 20px;
+}
+
+    .campo label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+    }
+
+    .entrada, .campo input[type="text"], .campo input[type="number"], .campo input[type="email"], .campo input[type="password"], .campo textarea {
+        display: block;
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 10px;
+        box-sizing: border-box;
+    }
+
+        .entrada:focus, .campo input:focus, .campo textarea:focus {
+            border-color: #b85d33;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(184, 93, 51, 0.15);
+        }
+
+/* --- Alineación y estilo de botones de acción en tablas --- */
+
+td form, td .acciones, .tabla td div {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+/* Normalizar botones de editar y eliminar en todas las tablas */
+
+td a.btn, td button.btn, .tabla a.btn, .tabla button.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50% !important;
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+/* Botón Editar */
+
+td a.btn-editar, td .btn-warning, .tabla .btn-warning {
+    color: #b85d33;
+    border-color: #f1d3c5;
+    background-color: #fffbf9;
+}
+
+    td a.btn-editar:hover, td .btn-warning:hover {
+        background-color: #b85d33;
+        color: #fff;
+    }
+
+/* Botón Eliminar */
+
+td button.btn-eliminar, td .btn-danger, .tabla .btn-danger {
+    color: #dc3545;
+    border-color: #f8d7da;
+    background-color: #fff8f8;
+}
+
+    td button.btn-eliminar:hover, td .btn-danger:hover {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+/* --- Corrección definitiva de botones de acción en la tabla --- */
+
+.acciones {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Botón Editar y botón Eliminar (tanto a como button) */
+
+.tabla .acciones a.boton-icono, .tabla .acciones button.boton-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50% !important;
+    background-color: #fff !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* Botón Editar (Lápiz) */
+
+.tabla .acciones a.boton-icono {
+    border: 1px solid #f1d3c5;
+    color: #b85d33;
+}
+
+    .tabla .acciones a.boton-icono:hover {
+        background-color: #b85d33 !important;
+        color: #fff !important;
+        border-color: #b85d33;
+    }
+
+/* Botón Eliminar (Tacho de basura dentro del form) */
+
+.tabla .acciones form.en-linea {
+    display: inline-flex;
+    margin: 0;
+}
+
+    .tabla .acciones form.en-linea button.boton-icono {
+        border: 1px solid #f8d7da;
+        color: #dc3545;
+    }
+
+        .tabla .acciones form.en-linea button.boton-icono:hover {
+            background-color: #dc3545 !important;
+            color: #fff !important;
+            border-color: #dc3545;
+        }
+
+/* --- Corrección de botones en cabeceras de panel --- */
+
+.panel-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+    .panel-cabecera .fila {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .panel-cabecera .boton, section.contenedor.seccion > div.panel-cabecera a.boton {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-radius: 10px !important;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    /* Botón secundario / claro (Volver) */
+
+    .panel-cabecera .boton-claro, .panel-cabecera a.boton:not(.boton-primario) {
+        background-color: #fff !important;
+        color: #212529 !important;
+        border: 1px solid #ced4da !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+        .panel-cabecera .boton-claro:hover, .panel-cabecera a.boton:not(.boton-primario):hover {
+            background-color: #f8f9fa !important;
+            border-color: #adb5bd !important;
+        }
+
+    /* Botón principal (Nueva categoría) */
+
+    .panel-cabecera .boton-primario {
+        background-color: #b85d33 !important;
+        color: #fff !important;
+        border: 1px solid #b85d33 !important;
+        box-shadow: 0 4px 10px rgba(184, 93, 51, 0.2);
+    }
+
+        .panel-cabecera .boton-primario:hover {
+            background-color: #9d4d29 !important;
+            border-color: #9d4d29 !important;
+        }
+
+/* --- Corrección de la vista de Consultas --- */
+
+.consulta {
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+    .consulta.sin-leer {
+        border-left: 4px solid #b85d33;
+        background: rgba(255, 248, 243, 0.85);
+    }
+
+.consulta-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.consulta-nombre {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.consulta-fecha {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.consulta-datos {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 14px;
+}
+
+    .consulta-datos a {
+        color: #b85d33;
+        text-decoration: none;
+    }
+
+        .consulta-datos a:hover {
+            text-decoration: underline;
+        }
+
+.consulta-mensaje {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #333;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    white-space: pre-line;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.consulta-acciones {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+    /* Normalización de botones chicos dentro de consultas */
+
+    .consulta-acciones .boton, .consulta-acciones button.boton, .consulta-acciones form.en-linea {
+        display: inline-flex;
+        margin: 0;
+    }
+
+    .consulta-acciones .boton-chico {
+        padding: 8px 14px !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    /* Botón WhatsApp */
+
+    .consulta-acciones .boton-whatsapp {
+        background-color: #25d366 !important;
+        color: #fff !important;
+        border: 1px solid #25d366 !important;
+    }
+
+        .consulta-acciones .boton-whatsapp:hover {
+            background-color: #20ba5a !important;
+        }
+
+    /* Botón Peligro / Eliminar */
+
+    .consulta-acciones .boton-peligro {
+        background-color: #fff8f8 !important;
+        color: #dc3545 !important;
+        border: 1px solid #f8d7da !important;
+    }
+
+        .consulta-acciones .boton-peligro:hover {
+            background-color: #dc3545 !important;
+            color: #fff !important;
+        }
+
+    /* Botones de borde / secundarios en consultas */
+
+    .consulta-acciones .boton-borde {
+        background-color: #fff !important;
+        color: #495057 !important;
+        border: 1px solid #ced4da !important;
+    }
+
+        .consulta-acciones .boton-borde:hover {
+            background-color: #f8f9fa !important;
+            border-color: #adb5bd !important;
+        }
+
+/* --- Aparición suave de las fotos ---
+   Las fotos arrancan atenuadas y se revelan al terminar de cargar.
+   El estado inicial se aplica solo dentro de la galería filtrable,
+   que es donde galeria.js agrega la clase "cargada". En el resto del
+   sitio las fotos se ven siempre, sin depender de ningún script. */
+#galeria-contenido .gallery-item img,
+#galeria-contenido .producto-foto img {
+    opacity: 0;
+    transition: opacity .7s ease, transform .5s ease;
+}
+
+    #galeria-contenido .gallery-item img.cargada,
+    #galeria-contenido .producto-foto img.cargada {
+        opacity: 1;
+    }
+
+/* Red de seguridad: si el script no llegara a correr, después de un
+   segundo y medio las fotos se muestran igual. */
+@media (scripting: none) {
+    #galeria-contenido .gallery-item img,
+    #galeria-contenido .producto-foto img {
+        opacity: 1;
+    }
+}
+
+/* Fondo tenue mientras la foto todavía no llegó. */
+.gallery .gallery-item,
+.producto-foto {
+    background-color: #f4efe9;
+}
+
+    /* El acercamiento de entrada usa transform, igual que el zoom del hover.
+   Una vez terminada la animación, el hover recupera el control. */
+    .gallery .gallery-item:hover img,
+    .producto-card:hover .producto-foto img {
+        animation: none;
+    }
+
+/* --- Salida de las piezas al cambiar de filtro ---
+   En lugar de desaparecer de golpe, cada pieza se disuelve: se desenfoca,
+   se encoge apenas y se va. El retraso lo pone galeria.js, de a una. */
+@keyframes disuelvePieza {
+    from {
+        opacity: 1;
+        transform: none;
+        filter: blur(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(.955);
+        filter: blur(14px);
+    }
+}
+
+.sale {
+    animation: disuelvePieza .5s cubic-bezier(.55, .06, .68, .19) both;
+}
+
+/* Mientras se disuelve nada responde al mouse. */
+#galeria-contenido.cambiando {
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sale {
+        animation: none;
+        opacity: 0;
+    }
+}
+
+/* ============================================================
+   AGREGAR AL FINAL DE wwwroot/plantilla/css/gatonegro.css
+   ============================================================ */
+
+/* --- Filtros de la galería: mano y color al pasar por encima --- */
+.filtros.isotope-filters li {
+    position: relative;
+    cursor: pointer;
+    padding-bottom: 6px;
+    border-bottom: none;
+    color: var(--bs-dark);
+    transition: color .35s ease;
+}
+
+    /* El subrayado crece desde el centro en vez de aparecer de golpe. */
+    .filtros.isotope-filters li::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 0;
+        height: 2px;
+        background: var(--bs-primary);
+        transform: translateX(-50%);
+        transition: width .35s ease;
+    }
+
+    .filtros.isotope-filters li:hover {
+        color: var(--bs-primary);
+    }
+
+        .filtros.isotope-filters li:hover::after {
+            width: 100%;
+        }
+
+    .filtros.isotope-filters li.filter-active {
+        color: var(--bs-primary);
+    }
+
+        .filtros.isotope-filters li.filter-active::after {
+            width: 100%;
+        }
+
+    /* El ícono acompaña el cambio de color y se levanta apenas. */
+    .filtros.isotope-filters li i {
+        margin-right: 6px;
+        transition: transform .35s ease;
+    }
+
+    .filtros.isotope-filters li:hover i {
+        transform: translateY(-2px);
+    }
+
+@media (prefers-reduced-motion: reduce) {
+    .filtros.isotope-filters li,
+    .filtros.isotope-filters li::after,
+    .filtros.isotope-filters li i {
         transition: none;
     }
 }

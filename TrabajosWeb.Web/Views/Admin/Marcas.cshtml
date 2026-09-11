@@ -1,6 +1,6 @@
-﻿@model List<TrabajosWeb.Shared.DTOs.CategoriaDto>
+@model List<TrabajosWeb.Shared.DTOs.MarcaDto>
 @{
-    ViewData["Title"] = "Categorías";
+    ViewData["Title"] = "Marcas";
     Layout = "_LayoutSalone";
 }
 
@@ -10,14 +10,14 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
             <div>
                 <h1 class="font-dancing-script text-primary mb-1">Administración</h1>
-                <h2 class="mb-0">Categorías</h2>
+                <h2 class="mb-0">Marcas</h2>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a asp-action="Index" class="btn btn-outline-secondary btn-sm px-3">
                     <i class="fa-solid fa-arrow-left me-1"></i> Volver al panel
                 </a>
-                <a asp-action="NuevaCategoria" class="btn btn-primary btn-sm px-4">
-                    <i class="fa-solid fa-plus me-1"></i> Nueva categoría
+                <a asp-action="NuevaMarca" class="btn btn-primary btn-sm px-4">
+                    <i class="fa-solid fa-plus me-1"></i> Nueva marca
                 </a>
             </div>
         </div>
@@ -26,10 +26,12 @@
         @if (!Model.Any())
         {
             <div class="text-center bg-light p-5 border rounded shadow-sm">
-                <i class="fa-solid fa-tags fa-4x text-primary mb-3"></i>
-                <h4 class="mb-3">No hay categorías cargadas.</h4>
-                <p class="text-muted mb-4">Comenzá creando la primera categoría para clasificar tus trabajos.</p>
-                <a asp-action="NuevaCategoria" class="btn btn-primary px-4">Crear la primera</a>
+                <i class="fa-solid fa-award fa-4x text-primary mb-3"></i>
+                <h4 class="mb-3">No hay marcas cargadas.</h4>
+                <p class="text-muted mb-4">
+                    Cargá las marcas con las que trabajás para que la clienta pueda filtrar por ellas.
+                </p>
+                <a asp-action="NuevaMarca" class="btn btn-primary px-4">Crear la primera</a>
             </div>
         }
         else
@@ -42,34 +44,20 @@
                                 <tr>
                                     <th scope="col" style="width: 80px;">Orden</th>
                                     <th scope="col">Nombre</th>
-                                    <th scope="col">Trabajos</th>
+                                    <th scope="col">Productos</th>
                                     <th scope="col">Estado</th>
                                     <th scope="col" class="text-end" style="width: 120px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var categoria in Model)
+                                @foreach (var marca in Model)
                                 {
                                     <tr>
-                                        <td class="text-muted">@categoria.Orden</td>
+                                        <td class="text-muted">@marca.Orden</td>
+                                        <td class="fw-bold">@marca.Nombre</td>
+                                        <td class="text-muted">@marca.CantidadProductos</td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                @if (!string.IsNullOrWhiteSpace(categoria.Icono))
-                                                {
-                                                    <i class="@categoria.Icono text-primary me-2"></i>
-                                                }
-                                                <div>
-                                                    <div class="fw-bold">@categoria.Nombre</div>
-                                                    @if (!string.IsNullOrWhiteSpace(categoria.Descripcion))
-                                                    {
-                                                        <small class="text-muted">@categoria.Descripcion</small>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-muted">@categoria.CantidadTrabajos</td>
-                                        <td>
-                                            @if (categoria.Activa)
+                                            @if (marca.Activa)
                                             {
                                                 <span class="badge bg-success">Activa</span>
                                             }
@@ -80,14 +68,14 @@
                                         </td>
                                         <td class="text-end">
                                             <div class="d-flex justify-content-end gap-2">
-                                                <a asp-action="EditarCategoria" asp-route-id="@categoria.Id"
+                                                <a asp-action="EditarMarca" asp-route-id="@marca.Id"
                                                    class="btn btn-sm btn-outline-primary" title="Editar">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </a>
-                                                <form asp-action="EliminarCategoria" method="post" class="d-inline"
-                                                      data-confirmar="¿Eliminar esta categoría?">
+                                                <form asp-action="EliminarMarca" method="post" class="d-inline"
+                                                      data-confirmar="¿Eliminar esta marca?">
                                                     @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@categoria.Id" />
+                                                    <input type="hidden" name="id" value="@marca.Id" />
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
                                                         <i class="fa-regular fa-trash-can"></i>
                                                     </button>
@@ -103,7 +91,7 @@
             </div>
 
             <p class="text-muted small mt-3">
-                Una categoría con trabajos no se puede eliminar. Si querés sacarla de la web sin perder el
+                Una marca con productos no se puede eliminar. Si querés sacarla del filtro sin perder el
                 contenido, editala y desmarcá «Activa».
             </p>
         }

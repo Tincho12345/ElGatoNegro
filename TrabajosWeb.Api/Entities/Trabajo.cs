@@ -36,5 +36,13 @@ public class Trabajo : EntidadAuditable
     public Guid CategoriaId { get; set; }
     public Categoria? Categoria { get; set; }
 
+    /// <summary>Solo la usan los productos; el resto de los trabajos va en null.</summary>
+    public Guid? SubcategoriaId { get; set; }
+    public Subcategoria? Subcategoria { get; set; }
+
+    /// <summary>Solo la usan los productos; el resto de los trabajos va en null.</summary>
+    public Guid? MarcaId { get; set; }
+    public Marca? Marca { get; set; }
+
     public ICollection<Media> Medios { get; set; } = new List<Media>();
 }

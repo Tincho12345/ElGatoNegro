@@ -19,6 +19,14 @@ public class TrabajoDto
     public string CategoriaNombre { get; set; } = string.Empty;
     public string CategoriaSlug { get; set; } = string.Empty;
 
+    public Guid? SubcategoriaId { get; set; }
+    public string? SubcategoriaNombre { get; set; }
+    public string? SubcategoriaSlug { get; set; }
+
+    public Guid? MarcaId { get; set; }
+    public string? MarcaNombre { get; set; }
+    public string? MarcaSlug { get; set; }
+
     public DateTime CreatedDate { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? ModifiedDate { get; set; }
@@ -67,6 +75,12 @@ public class TrabajoCreateDto
 
     [Required(ErrorMessage = "Elegí una categoría")]
     public Guid CategoriaId { get; set; }
+
+    /// <summary>Solo se completa cuando la categoría es Productos.</summary>
+    public Guid? SubcategoriaId { get; set; }
+
+    /// <summary>Solo se completa cuando la categoría es Productos.</summary>
+    public Guid? MarcaId { get; set; }
 
     [Range(0, 99999999, ErrorMessage = "El precio no puede ser negativo")]
     public decimal? Precio { get; set; }
