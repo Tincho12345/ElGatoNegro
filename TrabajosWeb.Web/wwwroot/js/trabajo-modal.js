@@ -48,10 +48,9 @@
         capa.querySelector('.modal-cancelar').addEventListener('click', cerrar);
         capa.querySelector('.modal-guardar').addEventListener('click', guardar);
 
-        capa.addEventListener('click', function (e) {
-            if (e.target === capa) cerrar();
-        });
-
+        // A propósito no se cierra al hacer clic afuera: con un formulario
+        // largo, un clic al costado borraría todo lo cargado sin aviso.
+        // Se sale por la cruz, por Cancelar o con Escape.
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && capa.classList.contains('abierta')) cerrar();
         });
@@ -76,11 +75,11 @@
 
     function cerrar() {
         if (subiendo) {
-            Swal.fire({
+            Swal.fire(encima({
                 icon: 'warning',
                 title: 'Hay una subida en curso',
                 text: 'Esperá a que termine para no perder los archivos.'
-            });
+            }));
             return;
         }
 
@@ -106,7 +105,12 @@
     function aviso(icono, titulo) {
         Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false,
-            timer: 2500, timerProgressBar: true
+            timer: 2500, timerProgressBar: true,
+            // El modal de edición tiene z-index propio: sin esto el aviso
+            // asoma por detrás.
+            didOpen: function (popup) {
+                popup.parentElement.style.zIndex = '20000';
+            }
         }).fire({ icon: icono, title: titulo });
     }
 
@@ -201,8 +205,10 @@
             return;
         }
 
+        // Un archivo ya guardado se borra del disco del servidor: no hay
+        // vuelta atrás, así que siempre se pregunta antes.
         var form = elemento.querySelector('form[data-confirmar]');
-        if (form) enviarBorrado(form, elemento);
+        if (form) confirmarBorrado(form, elemento);
     }
 
     // ---------- Archivos elegidos ----------
@@ -329,16 +335,35 @@
         });
     }
 
+    // Todo diálogo que salga estando el modal abierto necesita dos cosas:
+    // quedar por encima de él, y no cerrarse por un clic al costado.
+    function encima(opciones) {
+        opciones.allowOutsideClick = false;
+
+        opciones.didOpen = function (popup) {
+            popup.parentElement.style.zIndex = '20000';
+        };
+
+        return opciones;
+    }
+
     function confirmarBorrado(form, medio) {
         Swal.fire({
             title: form.dataset.confirmar || '¿Eliminar este archivo?',
+            text: 'Se borra del servidor y no se puede recuperar.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#b5453a',
             reverseButtons: true,
-            focusCancel: true
+            focusCancel: true,
+            allowOutsideClick: false,
+            // El modal de edición tiene z-index propio: sin esto la pregunta
+            // quedaría tapada detrás.
+            didOpen: function (popup) {
+                popup.parentElement.style.zIndex = '20000';
+            }
         }).then(function (r) {
             if (r.isConfirmed) enviarBorrado(form, medio);
         });
@@ -353,7 +378,7 @@
             .then(function (x) { return x.json(); })
             .then(function (x) {
                 if (!x.ok) {
-                    Swal.fire({ icon: 'error', title: x.error || 'No se pudo eliminar.' });
+                    Swal.fire(encima({ icon: 'error', title: x.error || 'No se pudo eliminar.' }));
                     return;
                 }
 
@@ -376,7 +401,7 @@
                 aviso('success', 'Archivo eliminado.');
             })
             .catch(function () {
-                Swal.fire({ icon: 'error', title: 'Falló la conexión.' });
+                Swal.fire(encima({ icon: 'error', title: 'Falló la conexión.' }));
             });
     }
 
@@ -431,7 +456,7 @@
             elegidos = [];
 
             if (r.aviso) {
-                Swal.fire({ icon: 'warning', title: 'Guardado con avisos', text: r.aviso });
+                Swal.fire(encima({ icon: 'warning', title: 'Guardado con avisos', text: r.aviso }));
             } else {
                 aviso('success', 'Trabajo guardado.');
             }
@@ -456,7 +481,7 @@
     function terminarConError(mensaje) {
         progreso(null);
         capa.querySelector('.modal-estado').textContent = '';
-        Swal.fire({ icon: 'error', title: 'No se guardó', text: mensaje });
+        Swal.fire(encima({ icon: 'error', title: 'No se guardó', text: mensaje }));
     }
 
     // Trae el panel de nuevo y reemplaza solo la parte que cambió.

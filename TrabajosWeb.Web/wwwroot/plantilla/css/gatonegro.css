@@ -1588,3 +1588,11 @@ td button.btn-eliminar, td .btn-danger, .tabla .btn-danger {
         transition: none;
     }
 }
+
+@media (max-width: 991.98px) {
+    .hero-slide .hero-precio,
+    .hero-slide .hero-precio-anterior,
+    .hero-slide .hero-precio-actual {
+        display: block !important;
+    }
+}

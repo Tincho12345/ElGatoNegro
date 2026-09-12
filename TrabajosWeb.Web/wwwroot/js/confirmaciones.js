@@ -59,7 +59,7 @@
             .then(function (r) { return r.json(); })
             .then(function (r) {
                 if (!r.ok) {
-                    Swal.fire({ icon: 'error', title: r.error || 'No se pudo eliminar.' });
+                    Swal.fire({ icon: 'error', title: r.error || 'No se pudo eliminar.', allowOutsideClick: false });
                     return;
                 }
 
@@ -73,7 +73,7 @@
                 });
             })
             .catch(function () {
-                Swal.fire({ icon: 'error', title: 'Falló la conexión. Probá de nuevo.' });
+                Swal.fire({ icon: 'error', title: 'Falló la conexión. Probá de nuevo.', allowOutsideClick: false });
             });
     }
 
@@ -93,7 +93,8 @@
                 cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#c0392b',
                 reverseButtons: true,
-                focusCancel: true
+                focusCancel: true,
+                allowOutsideClick: false
             }).then(function (r) {
                 if (!r.isConfirmed) return;
 

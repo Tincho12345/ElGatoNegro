@@ -91,11 +91,13 @@
                         {
                             var url = Model.ApiBaseUrl + media.Url;
 
-                            <div class="col-12 wow fadeIn" data-wow-delay="0.2s">
+                            // Cambiado a col-md-6 o col-lg-4 para que sean tarjetas pequeñas en grilla
+                            <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.2s">
                                 @if (media.Tipo == TipoMedia.Imagen)
                                 {
-                                    <div class="gallery-item medio-detalle">
-                                        <img src="@url" class="img-fluid w-100"
+                                    <div class="gallery-item medio-detalle h-100" style="height: 250px; overflow: hidden; position: relative;">
+                                        <img src="@url" class="img-fluid w-100 h-100"
+                                             style="object-fit: cover;"
                                              alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
                                         <div class="gallery-icon">
                                             <a href="@url" class="btn btn-primary btn-lg-square" data-lightbox="@grupo"
@@ -107,10 +109,12 @@
                                 }
                                 else
                                 {
-                                    <video class="w-100" controls preload="metadata" playsinline>
-                                        <source src="@url" />
-                                        Tu navegador no puede reproducir este video.
-                                    </video>
+                                    <div class="h-100" style="height: 250px; overflow: hidden;">
+                                        <video class="w-100 h-100" controls preload="metadata" playsinline style="object-fit: cover;">
+                                            <source src="@url" />
+                                            Tu navegador no puede reproducir este video.
+                                        </video>
+                                    </div>
                                 }
                             </div>
                         }

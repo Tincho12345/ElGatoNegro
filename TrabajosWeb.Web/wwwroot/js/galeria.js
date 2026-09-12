@@ -25,10 +25,19 @@
         categoria: '',
         subcat: '',
         marca: '',
+        texto: [],
         precioMin: null,
         precioMax: null,
         soloOferta: false
     };
+
+    // Misma limpieza que hace la vista al armar data-buscar.
+    function normalizar(texto) {
+        return (texto || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+    }
 
     function coincide(item) {
         // Isotope pasa el elemento; la guarda cubre el caso de que llegue
@@ -40,6 +49,15 @@
         if (estado.subcat && item.dataset.subcat !== estado.subcat) return false;
         if (estado.marca && item.dataset.marca !== estado.marca) return false;
         if (estado.soloOferta && item.dataset.oferta !== '1') return false;
+
+        // Todas las palabras tienen que estar; el orden no importa.
+        if (estado.texto.length) {
+            var donde = item.dataset.buscar || '';
+
+            for (var i = 0; i < estado.texto.length; i++) {
+                if (donde.indexOf(estado.texto[i]) === -1) return false;
+            }
+        }
 
         if (estado.precioMin !== null || estado.precioMax !== null) {
             var precio = parseFloat(item.dataset.precio);
@@ -88,6 +106,24 @@
         globo.hidden = n === 0;
     }
 
+    var buscador = bloque.querySelector('#buscadorProductos');
+    var campoBusqueda = bloque.querySelector('#buscarProducto');
+    var contadorBusqueda = bloque.querySelector('#buscadorResultados');
+    var limpiarBusqueda = bloque.querySelector('#limpiarBusqueda');
+
+    // Cuántas piezas quedaron a la vista. Solo se muestra mientras se busca.
+    function revisarResultados() {
+        if (!contadorBusqueda || !grilla) return;
+
+        if (!estado.texto.length) {
+            contadorBusqueda.textContent = '';
+            return;
+        }
+
+        var n = grilla.filteredItems.length;
+        contadorBusqueda.textContent = n === 1 ? '1 resultado' : n + ' resultados';
+    }
+
     // El panel lateral solo aparece dentro de Productos. Al mostrarlo la
     // grilla pierde un cuarto del ancho, así que Isotope tiene que recalcular.
     function revisarPanel() {
@@ -95,6 +131,7 @@
 
         var mostrar = !!slugProductos && estado.categoria === slugProductos;
 
+        if (buscador) buscador.hidden = !mostrar;
         if (panelProducto.hidden === !mostrar) return;
 
         panelProducto.hidden = !mostrar;
@@ -111,15 +148,21 @@
 
         grilla.arrange({ filter: coincide });
         revisarCuenta();
+        revisarResultados();
         setTimeout(revisarVacio, 420);
     }
 
     function limpiarFiltrosProducto() {
         estado.subcat = '';
         estado.marca = '';
+        estado.texto = [];
         estado.precioMin = null;
         estado.precioMax = null;
         estado.soloOferta = false;
+
+        if (campoBusqueda) campoBusqueda.value = '';
+        if (limpiarBusqueda) limpiarBusqueda.hidden = true;
+        if (contadorBusqueda) contadorBusqueda.textContent = '';
 
         if (!panelProducto) return;
 
@@ -207,6 +250,122 @@
             aplicar(li.dataset.filter, li.dataset.slug, true);
         });
     });
+
+    // ---------- Buscador de productos ----------
+
+    // Toma lo que haya en el campo y filtra. Lo usan el tipeo y el dictado.
+    function aplicarBusqueda() {
+        if (!campoBusqueda) return;
+
+        if (limpiarBusqueda) limpiarBusqueda.hidden = campoBusqueda.value === '';
+
+        // Cada palabra por separado: "shampoo loreal" encuentra igual
+        // aunque en el título estén al revés.
+        estado.texto = normalizar(campoBusqueda.value)
+            .split(/\s+/)
+            .filter(function (p) { return p.length > 0; });
+
+        refrescar();
+    }
+
+    if (campoBusqueda) {
+        var esperaBusqueda = null;
+
+        campoBusqueda.addEventListener('input', function () {
+            if (limpiarBusqueda) limpiarBusqueda.hidden = campoBusqueda.value === '';
+
+            clearTimeout(esperaBusqueda);
+            esperaBusqueda = setTimeout(aplicarBusqueda, 250);
+        });
+
+        // Enter no tiene que recargar nada: el filtro ya se aplicó solo.
+        campoBusqueda.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') e.preventDefault();
+        });
+    }
+
+    if (limpiarBusqueda) {
+        limpiarBusqueda.addEventListener('click', function () {
+            campoBusqueda.value = '';
+            limpiarBusqueda.hidden = true;
+            estado.texto = [];
+            refrescar();
+            campoBusqueda.focus();
+        });
+    }
+
+    // ---------- Dictado por voz ----------
+
+    (function () {
+        var botonVoz = bloque.querySelector('#dictarBusqueda');
+        if (!botonVoz || !campoBusqueda) return;
+
+        // Chrome y Edge la traen con prefijo; Firefox todavía no la tiene.
+        var Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Reconocimiento) return;
+
+        botonVoz.hidden = false;
+
+        var oyente = new Reconocimiento();
+        oyente.lang = 'es-AR';
+        oyente.continuous = false;
+        oyente.interimResults = true;
+        oyente.maxAlternatives = 1;
+
+        var escuchando = false;
+
+        function marcar(activo) {
+            escuchando = activo;
+            botonVoz.classList.toggle('escuchando', activo);
+            botonVoz.setAttribute('aria-label', activo ? 'Detener dictado' : 'Buscar por voz');
+        }
+
+        botonVoz.addEventListener('click', function () {
+            if (escuchando) {
+                oyente.stop();
+                return;
+            }
+
+            campoBusqueda.value = '';
+            try {
+                oyente.start();
+            } catch (e) {
+                // Un start() seguido de otro tira error; se ignora.
+            }
+        });
+
+        oyente.addEventListener('start', function () {
+            marcar(true);
+        });
+
+        oyente.addEventListener('result', function (e) {
+            var texto = '';
+
+            for (var i = 0; i < e.results.length; i++) {
+                texto += e.results[i][0].transcript;
+            }
+
+            // Se ve lo dictado mientras habla y la grilla acompaña.
+            campoBusqueda.value = texto.trim();
+            aplicarBusqueda();
+        });
+
+        oyente.addEventListener('error', function (e) {
+            marcar(false);
+
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                campoBusqueda.placeholder = 'Permití el micrófono para dictar';
+
+                setTimeout(function () {
+                    campoBusqueda.placeholder = 'Buscar producto, marca o tipo…';
+                }, 4000);
+            }
+        });
+
+        oyente.addEventListener('end', function () {
+            marcar(false);
+        });
+    })();
 
     // ---------- Panel lateral de productos ----------
 

@@ -180,6 +180,25 @@
             }
             else
             {
+                <div class="buscador-productos" id="buscadorProductos" hidden>
+                    <div class="buscador-caja">
+                        <i class="fa-solid fa-magnifying-glass buscador-lupa"></i>
+                        <input type="search" id="buscarProducto" autocomplete="off"
+                               placeholder="Buscar producto, marca o tipo…"
+                               aria-label="Buscar entre los productos" />
+                        <button type="button" class="buscador-limpiar" id="limpiarBusqueda"
+                                aria-label="Limpiar búsqueda" hidden>
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        @* El script lo muestra solo si el navegador entiende dictado. *@
+                        <button type="button" class="buscador-voz" id="dictarBusqueda"
+                                aria-label="Buscar por voz" title="Buscar por voz" hidden>
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                    </div>
+                    <span class="buscador-resultados" id="buscadorResultados"></span>
+                </div>
+
                 <div class="galeria-sin-resultados">
                     <i class="fa-regular fa-face-frown d-block"></i>
                     <p class="fs-5 mb-0">No hay nada que coincida con esos filtros.</p>
@@ -195,9 +214,20 @@
                         var videos = trabajo.Medios.Count(m => m.Tipo == TipoMedia.Video);
                         var etiqueta = trabajo.EtiquetaCalculada;
 
+                        // Todo lo buscable en una sola cadena, sin acentos y en
+                        // minúsculas, para comparar contra lo que se tipea.
+                        var textoBusqueda = Normalizar(string.Join(" ",
+                            trabajo.Titulo,
+                            trabajo.Descripcion,
+                            trabajo.MarcaNombre,
+                            trabajo.SubcategoriaNombre,
+                            trabajo.CategoriaNombre,
+                            trabajo.TextoOferta));
+
                         <div class="col-xl-4 col-md-6 isotope-item @trabajo.CategoriaSlug"
                              data-subcat="@trabajo.SubcategoriaSlug"
                              data-marca="@trabajo.MarcaSlug"
+                             data-buscar="@textoBusqueda"
                              data-precio="@(trabajo.Precio?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
                              data-oferta="@(trabajo.TieneOferta ? "1" : "0")">
                             <a asp-action="Detalle" asp-route-id="@trabajo.Id" class="gallery-item d-block">
@@ -269,6 +299,117 @@
 </div>
 
 <style>
+    /* ---------- Buscador de productos ---------- */
+    .buscador-productos {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .buscador-caja {
+        position: relative;
+        flex: 1 1 20rem;
+    }
+
+    .buscador-lupa {
+        position: absolute;
+        top: 50%;
+        left: 1rem;
+        transform: translateY(-50%);
+        opacity: .45;
+        pointer-events: none;
+    }
+
+    .buscador-caja input {
+        width: 100%;
+        padding: .7rem 4.8rem .7rem 2.6rem;
+        font-size: .95rem;
+        color: inherit;
+        background: transparent;
+        border: 1px solid rgba(0, 0, 0, .18);
+        border-radius: 2rem;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+        .buscador-caja input:focus {
+            outline: none;
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .15);
+        }
+
+        /* La X propia del navegador se pisa con la nuestra */
+        .buscador-caja input::-webkit-search-cancel-button {
+            display: none;
+        }
+
+    .buscador-limpiar,
+    .buscador-voz {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1.9rem;
+        height: 1.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: 0;
+        border-radius: 50%;
+        color: inherit;
+        opacity: .55;
+        cursor: pointer;
+    }
+
+        .buscador-limpiar:hover,
+        .buscador-voz:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, .06);
+        }
+
+    .buscador-limpiar {
+        right: 2.7rem;
+    }
+
+    .buscador-voz {
+        right: .7rem;
+    }
+
+        /* Mientras escucha, el micrófono late en rojo */
+        .buscador-voz.escuchando {
+            opacity: 1;
+            color: #c0392b;
+            background-color: rgba(192, 57, 43, .12);
+            animation: latido 1.1s ease-in-out infinite;
+        }
+
+    @@keyframes latido {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(192, 57, 43, .45);
+        }
+
+        70% {
+            box-shadow: 0 0 0 .5rem rgba(192, 57, 43, 0);
+        }
+    }
+
+    .buscador-resultados {
+        font-size: .88rem;
+        opacity: .65;
+        white-space: nowrap;
+    }
+
+    html[data-tema="oscuro"] .buscador-caja input {
+        border-color: rgba(255, 255, 255, .2);
+        color: #e0e0e0;
+    }
+
+    html[data-tema="oscuro"] .buscador-limpiar:hover,
+    html[data-tema="oscuro"] .buscador-voz:hover {
+        background-color: rgba(255, 255, 255, .1);
+    }
+
     /* ---------- Panel lateral de filtros ---------- */
     .filtros-lateral {
         font-size: .92rem;
@@ -522,3 +663,30 @@
         color: #e0e0e0;
     }
 </style>
+
+@functions {
+    /// <summary>
+    /// Pasa a minúsculas y saca los acentos, para que "tintura" encuentre
+    /// "Tintura" y "keratina" encuentre "Keratína".
+    /// </summary>
+    static string Normalizar(string? texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return string.Empty;
+
+        var descompuesto = texto.Normalize(System.Text.NormalizationForm.FormD);
+        var limpio = new System.Text.StringBuilder(descompuesto.Length);
+
+        foreach (var c in descompuesto)
+        {
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c)
+                != System.Globalization.UnicodeCategory.NonSpacingMark)
+            {
+                limpio.Append(c);
+            }
+        }
+
+        return limpio.ToString()
+            .Normalize(System.Text.NormalizationForm.FormC)
+            .ToLowerInvariant();
+    }
+}
