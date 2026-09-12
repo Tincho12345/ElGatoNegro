@@ -82,9 +82,28 @@ public class HomeController : Controller
     }
 
     [HttpGet]
-    public IActionResult Contacto()
+    public async Task<IActionResult> Contacto(Guid? trabajo, CancellationToken ct)
     {
-        return View(new ContactoViewModel { Contacto = _contacto });
+        var modelo = new ContactoViewModel
+        {
+            Contacto = _contacto,
+            ApiBaseUrl = _apiBaseUrl
+        };
+
+        // Se llega desde el detalle: el mensaje viene escrito para que la
+        // persona solo agregue lo suyo.
+        if (trabajo.HasValue)
+        {
+            var elegido = await _api.GetAsync<TrabajoDto>($"api/Trabajos/{trabajo}", ct);
+
+            if (elegido is not null)
+            {
+                modelo.Trabajo = elegido;
+                modelo.Consulta.Mensaje = ArmarMensaje(elegido);
+            }
+        }
+
+        return View(modelo);
     }
 
     [HttpPost]
@@ -92,6 +111,7 @@ public class HomeController : Controller
     public async Task<IActionResult> Contacto(ContactoViewModel modelo, CancellationToken ct)
     {
         modelo.Contacto = _contacto;
+        modelo.ApiBaseUrl = _apiBaseUrl;
 
         if (!ModelState.IsValid)
             return View(modelo);
@@ -110,4 +130,23 @@ public class HomeController : Controller
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() => View();
+
+    /// <summary>
+    /// Texto inicial de la consulta. Deja una línea en blanco al final para
+    /// que se note dónde escribir.
+    /// </summary>
+    private static string ArmarMensaje(TrabajoDto trabajo)
+    {
+        var lineas = new List<string> { $"Hola, quiero consultar por: {trabajo.Titulo}" };
+
+        if (!string.IsNullOrWhiteSpace(trabajo.MarcaNombre))
+            lineas.Add($"Marca: {trabajo.MarcaNombre}");
+
+        if (trabajo.Precio.HasValue)
+            lineas.Add($"Precio publicado: {trabajo.Precio.Value:C0}");
+
+        lineas.Add(string.Empty);
+
+        return string.Join(Environment.NewLine, lineas);
+    }
 }

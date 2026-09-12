@@ -1,7 +1,14 @@
-﻿@model TrabajosWeb.Web.Models.ContactoViewModel
+﻿@using TrabajosWeb.Shared.DTOs
+@model TrabajosWeb.Web.Models.ContactoViewModel
 @{
     ViewData["Title"] = "Contacto";
     Layout = "_LayoutSalone";
+
+    var consultado = Model.Trabajo;
+
+    var portada = consultado?.Medios
+        .OrderBy(m => m.Orden)
+        .FirstOrDefault(m => m.Tipo == TipoMedia.Imagen);
 }
 
 <div class="container-fluid bg-light page-header py-5 mb-5">
@@ -20,6 +27,37 @@
             <div class="col-lg-7 wow fadeIn" data-wow-delay="0.2s">
                 <h1 class="font-dancing-script text-primary">Consultanos</h1>
                 <h3 class="mb-4">Mandanos tu mensaje</h3>
+
+                @if (consultado is not null)
+                {
+                    @* Se llegó desde el detalle: se muestra por qué trabajo
+                       es la consulta, así no queda solo en el texto. *@
+                    <div class="consulta-sobre mb-4">
+                        @if (portada is not null)
+                        {
+                            <img src="@(Model.ApiBaseUrl + portada.Url)" alt="" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="consulta-sobre-vacia"><i class="fa-solid fa-scissors"></i></div>
+                        }
+
+                        <div class="consulta-sobre-datos">
+                            <span class="consulta-sobre-rotulo">Estás consultando por</span>
+                            <strong>@consultado.Titulo</strong>
+
+                            @if (consultado.Precio.HasValue)
+                            {
+                                <span class="consulta-sobre-precio">@consultado.Precio.Value.ToString("C0")</span>
+                            }
+                        </div>
+
+                        <a asp-action="Detalle" asp-route-id="@consultado.Id"
+                           class="consulta-sobre-ver" title="Volver al trabajo">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                }
 
                 <form asp-action="Contacto" method="post">
                     @Html.AntiForgeryToken()
@@ -56,6 +94,10 @@
                             <textarea asp-for="Consulta.Mensaje" class="form-control border-0 bg-light px-4 py-3"
                                       rows="6"
                                       placeholder="Quiero un balayage, tengo el pelo hasta los hombros y color castaño."></textarea>
+                            @if (consultado is not null)
+                            {
+                                <div class="form-text">Agregá abajo lo que quieras preguntar.</div>
+                            }
                             <span asp-validation-for="Consulta.Mensaje" class="text-danger"></span>
                         </div>
 
@@ -116,6 +158,71 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Tarjetita del trabajo por el que se consulta */
+    .consulta-sobre {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: .75rem 1rem;
+        border: 1px solid rgba(0, 0, 0, .1);
+        border-left: 3px solid var(--bs-primary);
+        border-radius: .4rem;
+    }
+
+        .consulta-sobre img,
+        .consulta-sobre-vacia {
+            width: 4rem;
+            height: 4rem;
+            object-fit: cover;
+            border-radius: .35rem;
+            flex-shrink: 0;
+        }
+
+    .consulta-sobre-vacia {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, .05);
+        color: var(--bs-primary);
+    }
+
+    .consulta-sobre-datos {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .consulta-sobre-rotulo {
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        opacity: .6;
+    }
+
+    .consulta-sobre-precio {
+        font-size: .9rem;
+        color: var(--bs-primary);
+        font-weight: 600;
+    }
+
+    .consulta-sobre-ver {
+        margin-left: auto;
+        opacity: .5;
+        color: inherit;
+    }
+
+        .consulta-sobre-ver:hover {
+            opacity: 1;
+            color: var(--bs-primary);
+        }
+
+    html[data-tema="oscuro"] .consulta-sobre {
+        border-color: rgba(255, 255, 255, .15);
+        border-left-color: var(--bs-primary);
+    }
+</style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

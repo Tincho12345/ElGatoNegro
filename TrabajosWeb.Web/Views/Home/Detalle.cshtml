@@ -8,14 +8,44 @@
     ViewData["VolverUrl"] = Url.Action("Index", "Home");
     ViewData["VolverTexto"] = "Volver a los trabajos";
 
-    var mensaje = $"{Model.Contacto.MensajePredeterminado} Vi este trabajo: {trabajo.Titulo}";
-    var linkConsulta = $"https://wa.me/{Model.Contacto.WhatsAppNumero}?text={Uri.EscapeDataString(mensaje)}";
-
     var medios = trabajo.Medios.OrderBy(m => m.Orden).ToList();
     var fotos = medios.Count(m => m.Tipo == TipoMedia.Imagen);
     var videos = medios.Count(m => m.Tipo == TipoMedia.Video);
     var grupo = $"trabajo-{trabajo.Id}";
     var etiqueta = trabajo.EtiquetaCalculada;
+
+    // Dirección de esta misma página, para que la consulta llegue con el link.
+    var enlaceTrabajo = Url.Action("Detalle", "Home",
+        new { id = trabajo.Id }, Context.Request.Scheme);
+
+    // Mensaje de WhatsApp armado con los datos del trabajo. Los saltos de
+    // línea viajan como %0A y WhatsApp los respeta.
+    var lineas = new List<string>
+    {
+        Model.Contacto.MensajePredeterminado,
+        string.Empty,
+        $"Me interesa: {trabajo.Titulo}"
+    };
+
+    if (!string.IsNullOrWhiteSpace(trabajo.MarcaNombre))
+    {
+        lineas.Add($"Marca: {trabajo.MarcaNombre}");
+    }
+
+    if (trabajo.Precio.HasValue)
+    {
+        lineas.Add($"Precio publicado: {trabajo.Precio.Value.ToString("C0")}");
+    }
+
+    if (!string.IsNullOrWhiteSpace(enlaceTrabajo))
+    {
+        lineas.Add(enlaceTrabajo);
+    }
+
+    var mensaje = string.Join("\n", lineas);
+    var linkConsulta = $"https://wa.me/{Model.Contacto.WhatsAppNumero}?text={Uri.EscapeDataString(mensaje)}";
+
+    var primero = medios.FirstOrDefault();
 }
 
 <div class="container-fluid bg-light page-header py-5 mb-5">
@@ -54,6 +84,13 @@
                         <i class="fa-solid fa-tag"></i>
                         <span>@trabajo.CategoriaNombre</span>
                     </div>
+                    @if (!string.IsNullOrWhiteSpace(trabajo.MarcaNombre))
+                    {
+                        <div class="ficha-dato">
+                            <i class="fa-solid fa-award"></i>
+                            <span>@trabajo.MarcaNombre</span>
+                        </div>
+                    }
                     @if (fotos > 0)
                     {
                         <div class="ficha-dato">
@@ -86,37 +123,76 @@
                 }
                 else
                 {
-                    <div class="row g-4 mt-2">
-                        @foreach (var media in medios)
+                    <div class="visor @(medios.Count > 1 ? null : "visor-solo") wow fadeIn" data-wow-delay="0.2s">
+                        @if (medios.Count > 1)
                         {
-                            var url = Model.ApiBaseUrl + media.Url;
+                            <div class="visor-miniaturas" role="tablist" aria-label="Fotos y videos">
+                                @for (var i = 0; i < medios.Count; i++)
+                                {
+                                    var media = medios[i];
+                                    var url = Model.ApiBaseUrl + media.Url;
 
-                            // Cambiado a col-md-6 o col-lg-4 para que sean tarjetas pequeñas en grilla
-                            <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.2s">
-                                @if (media.Tipo == TipoMedia.Imagen)
-                                {
-                                    <div class="gallery-item medio-detalle h-100" style="height: 250px; overflow: hidden; position: relative;">
-                                        <img src="@url" class="img-fluid w-100 h-100"
-                                             style="object-fit: cover;"
-                                             alt="@(media.TextoAlternativo ?? trabajo.Titulo)" loading="lazy" />
-                                        <div class="gallery-icon">
-                                            <a href="@url" class="btn btn-primary btn-lg-square" data-lightbox="@grupo"
-                                               data-title="@trabajo.Titulo" data-sin-transicion>
-                                                <i class="fa-solid fa-expand"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="h-100" style="height: 250px; overflow: hidden;">
-                                        <video class="w-100 h-100" controls preload="metadata" playsinline style="object-fit: cover;">
-                                            <source src="@url" />
-                                            Tu navegador no puede reproducir este video.
-                                        </video>
-                                    </div>
+                                    <button type="button"
+                                            class="visor-mini @(i == 0 ? "activa" : null)"
+                                            role="tab" aria-selected="@(i == 0 ? "true" : "false")"
+                                            data-indice="@i"
+                                            data-url="@url"
+                                            data-tipo="@(media.Tipo == TipoMedia.Imagen ? "imagen" : "video")"
+                                            data-alt="@(media.TextoAlternativo ?? trabajo.Titulo)">
+                                        @if (media.Tipo == TipoMedia.Imagen)
+                                        {
+                                            <img src="@url" alt="" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <video src="@url" preload="metadata" muted></video>
+                                            <span class="visor-mini-play"><i class="fa-solid fa-play"></i></span>
+                                        }
+                                    </button>
                                 }
                             </div>
+                        }
+
+                        <div class="visor-principal">
+                            @if (primero is not null && primero.Tipo == TipoMedia.Imagen)
+                            {
+                                <img id="visorImagen" src="@(Model.ApiBaseUrl + primero.Url)"
+                                     alt="@(primero.TextoAlternativo ?? trabajo.Titulo)" />
+                            }
+                            else
+                            {
+                                <img id="visorImagen" src="" alt="@trabajo.Titulo" hidden />
+                            }
+
+                            <video id="visorVideo" controls preload="metadata" playsinline
+                                   @(primero is not null && primero.Tipo == TipoMedia.Video ? "" : "hidden")>
+                                @if (primero is not null && primero.Tipo == TipoMedia.Video)
+                                {
+                                    <source src="@(Model.ApiBaseUrl + primero.Url)" />
+                                }
+                                Tu navegador no puede reproducir este video.
+                            </video>
+
+                            @if (fotos > 0)
+                            {
+                                <button type="button" class="visor-expandir" id="visorExpandir"
+                                        aria-label="Ver en grande">
+                                    <i class="fa-solid fa-expand"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    @* Anclas ocultas: le dan a la lupa el álbum completo con
+                       flechas de anterior y siguiente. *@
+                    <div class="d-none">
+                        @foreach (var media in medios.Where(m => m.Tipo == TipoMedia.Imagen))
+                        {
+                            <a href="@(Model.ApiBaseUrl + media.Url)"
+                               data-lightbox="@grupo"
+                               data-title="@trabajo.Titulo"
+                               data-sin-transicion
+                               data-url="@(Model.ApiBaseUrl + media.Url)"></a>
                         }
                     </div>
                 }
@@ -167,7 +243,8 @@
                         <i class="fa-brands fa-whatsapp me-2"></i>Consultar por WhatsApp
                     </a>
 
-                    <a asp-action="Contacto" class="btn btn-dark text-uppercase w-100 py-3 mx-0">
+                    <a asp-action="Contacto" asp-route-trabajo="@trabajo.Id"
+                       class="btn btn-dark text-uppercase w-100 py-3 mx-0">
                         <i class="fa-solid fa-envelope me-2"></i>Enviar un mensaje
                     </a>
                 </div>
@@ -222,3 +299,240 @@
         }
     </div>
 </div>
+
+<style>
+    /* ---------- Visor: foto grande con miniaturas al costado ---------- */
+    .visor {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .visor-miniaturas {
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+        flex: 0 0 5.5rem;
+        max-height: 32rem;
+        overflow-y: auto;
+        padding-right: .25rem;
+    }
+
+    .visor-mini {
+        position: relative;
+        width: 5.5rem;
+        height: 5.5rem;
+        padding: 0;
+        overflow: hidden;
+        background: none;
+        border: 2px solid transparent;
+        border-radius: .4rem;
+        cursor: pointer;
+        opacity: .6;
+        transition: opacity .2s ease, border-color .2s ease;
+    }
+
+        .visor-mini:hover {
+            opacity: 1;
+        }
+
+        .visor-mini.activa {
+            opacity: 1;
+            border-color: var(--bs-primary);
+        }
+
+        .visor-mini img,
+        .visor-mini video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .visor-mini-play {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, .35);
+        color: #fff;
+        font-size: .9rem;
+    }
+
+    .visor-principal {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 32rem;
+        overflow: hidden;
+        border-radius: .5rem;
+        background-color: rgba(0, 0, 0, .04);
+    }
+
+        .visor-principal img,
+        .visor-principal video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* La lupa del cursor avisa que la foto se amplía */
+        .visor-principal img {
+            cursor: zoom-in;
+        }
+
+    .visor-expandir {
+        position: absolute;
+        right: 1rem;
+        bottom: 1rem;
+        width: 2.8rem;
+        height: 2.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bs-primary);
+        color: #fff;
+        border: 0;
+        border-radius: .4rem;
+        opacity: .85;
+        cursor: pointer;
+        transition: opacity .2s ease, transform .2s ease;
+    }
+
+        .visor-expandir:hover {
+            opacity: 1;
+            transform: scale(1.06);
+        }
+
+    /* Con un solo archivo no hay tira de miniaturas, así que el visor se
+       adapta a la imagen: sin alto fijo no quedan franjas a los costados. */
+    .visor-solo .visor-principal {
+        height: auto;
+        background-color: transparent;
+        text-align: center;
+    }
+
+        .visor-solo .visor-principal img,
+        .visor-solo .visor-principal video {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 32rem;
+            margin-inline: auto;
+        }
+
+    /* En pantallas chicas las miniaturas pasan abajo, en una tira horizontal */
+    @@media (max-width: 767.98px) {
+        .visor {
+            flex-direction: column-reverse;
+        }
+
+        .visor-miniaturas {
+            flex-direction: row;
+            flex: 0 0 auto;
+            max-height: none;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: .25rem;
+        }
+
+        .visor-mini {
+            flex: 0 0 4.5rem;
+            width: 4.5rem;
+            height: 4.5rem;
+        }
+
+        .visor-principal {
+            height: 20rem;
+        }
+
+        .visor-solo .visor-principal {
+            height: auto;
+        }
+
+            .visor-solo .visor-principal img,
+            .visor-solo .visor-principal video {
+                max-height: 20rem;
+            }
+    }
+
+    html[data-tema="oscuro"] .visor-principal {
+        background-color: rgba(255, 255, 255, .05);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        (function () {
+            var principal = document.querySelector('.visor-principal');
+            if (!principal) return;
+
+            var imagen = document.getElementById('visorImagen');
+            var video = document.getElementById('visorVideo');
+            var expandir = document.getElementById('visorExpandir');
+            var minis = document.querySelectorAll('.visor-mini');
+
+            // Las anclas ocultas son las que abren la lupa con el álbum entero.
+            var anclas = document.querySelectorAll('a[data-lightbox][data-url]');
+            var urlActual = imagen && !imagen.hidden ? imagen.getAttribute('src') : '';
+
+            function mostrar(mini) {
+                var url = mini.dataset.url;
+                var esImagen = mini.dataset.tipo === 'imagen';
+
+                minis.forEach(function (otra) {
+                    otra.classList.toggle('activa', otra === mini);
+                    otra.setAttribute('aria-selected', otra === mini);
+                });
+
+                // El video anterior sigue sonando si no se lo frena a mano.
+                video.pause();
+
+                if (esImagen) {
+                    imagen.src = url;
+                    imagen.alt = mini.dataset.alt || '';
+                    imagen.hidden = false;
+                    video.hidden = true;
+                    urlActual = url;
+                    if (expandir) expandir.hidden = false;
+                } else {
+                    video.src = url;
+                    video.hidden = false;
+                    imagen.hidden = true;
+                    if (expandir) expandir.hidden = true;
+                }
+            }
+
+            minis.forEach(function (mini) {
+                mini.addEventListener('click', function () { mostrar(mini); });
+            });
+
+            // Abre la lupa en la foto que se está viendo. El álbum lo arman
+            // las anclas ocultas, así que adentro quedan las flechas para
+            // recorrer todas las fotos del trabajo.
+            function abrirLupa() {
+                for (var i = 0; i < anclas.length; i++) {
+                    if (anclas[i].dataset.url === urlActual) {
+                        anclas[i].click();
+                        return;
+                    }
+                }
+
+                if (anclas.length) anclas[0].click();
+            }
+
+            if (expandir) {
+                expandir.addEventListener('click', abrirLupa);
+            }
+
+            // La foto grande también abre: es lo que uno intenta primero.
+            if (imagen) {
+                imagen.addEventListener('click', function () {
+                    if (!imagen.hidden) abrirLupa();
+                });
+            }
+        })();
+    </script>
+}
