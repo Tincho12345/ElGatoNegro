@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using TrabajosWeb.Shared.DTOs;
@@ -12,15 +13,27 @@ public class HomeController : Controller
     private readonly IApiClient _api;
     private readonly ContactoSettings _contacto;
     private readonly string _apiBaseUrl;
+    private readonly IDataProtector _protector;
+    private readonly ILogger<HomeController> _logger;
+
+    /// <summary>Menos que esto entre abrir y enviar el formulario es un bot.</summary>
+    private static readonly TimeSpan TiempoMinimo = TimeSpan.FromSeconds(3);
+
+    /// <summary>Pasado este rato el sello vence y hay que recargar.</summary>
+    private static readonly TimeSpan TiempoMaximo = TimeSpan.FromHours(3);
 
     public HomeController(
         IApiClient api,
         IOptions<ContactoSettings> contacto,
-        IOptions<ApiSettings> apiSettings)
+        IOptions<ApiSettings> apiSettings,
+        IDataProtectionProvider protectorProvider,
+        ILogger<HomeController> logger)
     {
         _api = api;
         _contacto = contacto.Value;
         _apiBaseUrl = apiSettings.Value.BaseUrl.TrimEnd('/');
+        _protector = protectorProvider.CreateProtector("TrabajosWeb.FormularioConsulta");
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index(string? categoria, CancellationToken ct)
@@ -87,7 +100,8 @@ public class HomeController : Controller
         var modelo = new ContactoViewModel
         {
             Contacto = _contacto,
-            ApiBaseUrl = _apiBaseUrl
+            ApiBaseUrl = _apiBaseUrl,
+            Sello = NuevoSello()
         };
 
         // Se llega desde el detalle: el mensaje viene escrito para que la
@@ -113,14 +127,26 @@ public class HomeController : Controller
         modelo.Contacto = _contacto;
         modelo.ApiBaseUrl = _apiBaseUrl;
 
+        // Al bot se le responde como si todo hubiera salido bien: si se entera
+        // de que lo detectamos, prueba con otra cosa.
+        if (EsSpam(modelo))
+        {
+            TempData["Exito"] = "Recibimos tu mensaje. Te respondemos a la brevedad.";
+            return RedirectToAction(nameof(Contacto));
+        }
+
         if (!ModelState.IsValid)
+        {
+            modelo.Sello = NuevoSello();
             return View(modelo);
+        }
 
         var (ok, _, error) = await _api.PostAsync<object>("api/Consultas", modelo.Consulta, ct);
 
         if (!ok)
         {
             ModelState.AddModelError(string.Empty, error ?? "No se pudo enviar la consulta.");
+            modelo.Sello = NuevoSello();
             return View(modelo);
         }
 
@@ -130,6 +156,58 @@ public class HomeController : Controller
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() => View();
+
+    // ---------- Anti spam ----------
+
+    private string NuevoSello() =>
+        _protector.Protect(DateTime.UtcNow.Ticks.ToString());
+
+    private bool EsSpam(ContactoViewModel modelo)
+    {
+        // El campo trampa no se ve en pantalla: si viene completo, lo llenó
+        // algo que leyó el HTML.
+        if (!string.IsNullOrWhiteSpace(modelo.Web))
+        {
+            _logger.LogInformation("Consulta descartada: cayó en el campo trampa.");
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(modelo.Sello))
+        {
+            _logger.LogInformation("Consulta descartada: llegó sin sello.");
+            return true;
+        }
+
+        long ticks;
+
+        try
+        {
+            ticks = long.Parse(_protector.Unprotect(modelo.Sello));
+        }
+        catch
+        {
+            // Firma inválida: el sello se fabricó afuera.
+            _logger.LogInformation("Consulta descartada: sello inválido.");
+            return true;
+        }
+
+        var transcurrido = DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc);
+
+        if (transcurrido < TiempoMinimo)
+        {
+            _logger.LogInformation("Consulta descartada: enviada en {Segundos}s.",
+                transcurrido.TotalSeconds);
+            return true;
+        }
+
+        if (transcurrido > TiempoMaximo)
+        {
+            _logger.LogInformation("Consulta descartada: el formulario estuvo abierto demasiado tiempo.");
+            return true;
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Texto inicial de la consulta. Deja una línea en blanco al final para

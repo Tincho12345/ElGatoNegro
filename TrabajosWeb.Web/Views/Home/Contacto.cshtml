@@ -61,6 +61,15 @@
 
                 <form asp-action="Contacto" method="post">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Sello" />
+
+                    @* Campo trampa. No se ve, no se tabula y no lo lee un
+                       lector de pantalla: solo lo completa un bot. *@
+                    <div class="trampa" aria-hidden="true">
+                        <label for="Web">No completar este campo</label>
+                        <input asp-for="Web" id="Web" type="text"
+                               tabindex="-1" autocomplete="off" />
+                    </div>
 
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -160,6 +169,16 @@
 </div>
 
 <style>
+    /* Campo trampa: fuera de la pantalla en vez de display:none, porque hay
+       bots que saltean lo que está explícitamente oculto. */
+    .trampa {
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+    }
+
     /* Tarjetita del trabajo por el que se consulta */
     .consulta-sobre {
         display: flex;

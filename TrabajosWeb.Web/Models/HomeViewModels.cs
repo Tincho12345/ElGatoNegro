@@ -29,4 +29,16 @@ public class ContactoViewModel
     public TrabajoDto? Trabajo { get; set; }
 
     public string ApiBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Campo trampa: invisible para las personas, pero los bots lo completan
+    /// porque leen el HTML. Si llega con algo, la consulta se descarta.
+    /// </summary>
+    public string? Web { get; set; }
+
+    /// <summary>
+    /// Momento en que se abrió el formulario, firmado para que no se pueda
+    /// falsificar. Sirve para descartar envíos instantáneos.
+    /// </summary>
+    public string? Sello { get; set; }
 }
