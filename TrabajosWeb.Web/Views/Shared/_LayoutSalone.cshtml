@@ -1,4 +1,4 @@
-﻿@using TrabajosWeb.Web.Services
+@using TrabajosWeb.Web.Services
 @inject IAjustesService AjustesSrv
 @{
     var sitio = await AjustesSrv.ObtenerAsync();
@@ -71,7 +71,7 @@
                         <a href="#" class="nav-link dropdown-toggle @(controlador == "Home" && accion == "Index" ? "active" : null)" data-bs-toggle="dropdown" aria-expanded="false">Trabajos</a>
                         <div class="dropdown-menu m-0 bg-light border-0 shadow-sm">
                             <a asp-controller="Home" asp-action="Index" class="dropdown-item">Todos los trabajos</a>
-        
+
                             @* Verificamos si la vista actual tiene un modelo que contenga categorías (como GaleriaViewModel) *@
                             @if (ViewData.Model is TrabajosWeb.Web.Models.GaleriaViewModel galeriaModel && galeriaModel.Categorias != null)
                             {
@@ -126,6 +126,18 @@
                 </div>
 
                 <div class="d-flex align-items-center">
+                    @if (controlador == "Admin")
+                    {
+                        @* Solo dentro del panel: un visitante del sitio no
+                       tiene nada que suscribir. El color se lo cambia
+                       push.js según haya o no una suscripción activa
+                       en este navegador. (Sin contador de mensajes) *@
+                        <button type="button"
+                                class="boton-notificaciones btn btn-sm btn-outline-primary btn-sm-square me-3 position-relative"
+                                aria-pressed="false" title="Activar notificaciones de consultas nuevas">
+                            <i class="fa-solid fa-bell"></i>
+                        </button>
+                    }
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <form asp-controller="Cuenta" asp-action="Logout" method="post" class="m-0 me-3">
@@ -270,6 +282,48 @@
 
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top" data-sin-transicion><i class="bi bi-arrow-up"></i></a>
 
+    <!-- Barra de Navegacion Inferior para Mobile (Estilo App / Mercado Libre) -->
+    <nav class="mobile-bottom-nav d-lg-none">
+        <a asp-controller="Home" asp-action="Index" class="mobile-nav-item @(controlador == "Home" && accion == "Index" ? "active" : null)">
+            <i class="fa-solid fa-house"></i>
+            <span>Inicio</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-expanded="false">
+            <i class="fa-solid fa-list"></i>
+            <span>Menu</span>
+        </a>
+        <a asp-controller="Home" asp-action="Contacto" class="mobile-nav-item @(controlador == "Home" && accion == "Contacto" ? "active" : null)">
+            <i class="fa-solid fa-envelope"></i>
+            <span>Contacto</span>
+        </a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Admin" asp-action="Index" class="mobile-nav-item @(controlador == "Admin" ? "active" : null)">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span>Panel</span>
+            </a>
+            if (controlador == "Admin")
+            {
+                @* Misma campanita que la de escritorio (clase .boton-notificaciones),
+                   sincronizada por push.js. Solo aparece dentro del panel. *@
+                <button type="button" class="mobile-nav-item boton-notificaciones position-relative"
+                        aria-pressed="false" title="Activar notificaciones de consultas nuevas">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Avisos</span>
+                    <span class="badge-notificaciones badge rounded-pill bg-danger position-absolute"
+                          style="display:none; top:2px; right:20%; font-size:.6rem;">0</span>
+                </button>
+            }
+        }
+        else
+        {
+            <a asp-controller="Cuenta" asp-action="Login" class="mobile-nav-item @(controlador == "Cuenta" ? "active" : null)">
+                <i class="fa-solid fa-user"></i>
+                <span>Acceso</span>
+            </a>
+        }
+    </nav>
+
     @if (sitio.TieneWhatsApp)
     {
         <a href="@sitio.LinkWhatsApp" target="_blank" rel="noopener"
@@ -317,6 +371,7 @@
     <script src="~/js/transiciones.js" asp-append-version="true"></script>
     <script src="~/js/trabajo-modal.js" asp-append-version="true"></script>
     <script src="~/js/panel-tabla.js" asp-append-version="true"></script>
+    <script src="~/js/push.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TrabajosWeb.Api.Data;
 using TrabajosWeb.Api.Entities;
+using TrabajosWeb.Api.Services;
 using TrabajosWeb.Shared.DTOs;
 
 namespace TrabajosWeb.Api.Controllers;
@@ -15,15 +16,18 @@ public class ConsultasController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IPushNotificationService _push;
     private readonly ILogger<ConsultasController> _logger;
 
     public ConsultasController(
         AppDbContext context,
         IMapper mapper,
+        IPushNotificationService push,
         ILogger<ConsultasController> logger)
     {
         _context = context;
         _mapper = mapper;
+        _push = push;
         _logger = logger;
     }
 
@@ -39,6 +43,14 @@ public class ConsultasController : ControllerBase
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Nueva consulta recibida (Id {Id})", consulta.Id);
+
+        // Va después de guardar y con su propio try/catch adentro del
+        // servicio: si falla el envío, la consulta ya quedó guardada igual.
+        await _push.NotificarATodosAsync(
+            "Nueva consulta",
+            $"{consulta.Nombre}: {Truncar(consulta.Mensaje, 90)}",
+            "/Admin/Consultas",
+            ct);
 
         // No se devuelve el objeto: el visitante no necesita ver el Id ni el resto.
         return Ok(new { mensaje = "Consulta enviada correctamente." });
@@ -90,4 +102,7 @@ public class ConsultasController : ControllerBase
 
         return NoContent();
     }
+
+    private static string Truncar(string texto, int largo) =>
+        texto.Length <= largo ? texto : texto[..largo] + "…";
 }

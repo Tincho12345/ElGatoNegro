@@ -436,15 +436,6 @@
         transform: translateY(-4px);
     }
 
-.hero-slide {
-    position: relative;
-    display: block;
-    height: 620px;
-    overflow: hidden;
-    text-decoration: none;
-    border-radius: 14px;
-}
-
 .panel-consulta, .medio-detalle.gallery-item {
     border-radius: 14px;
 }
@@ -1595,4 +1586,238 @@ td button.btn-eliminar, td .btn-danger, .tabla .btn-danger {
     .hero-slide .hero-precio-actual {
         display: block !important;
     }
+}
+
+/* ============================================================
+   AJUSTES ESPECÍFICOS PARA EL HERO (Carrusel de Productos)
+   Este bloque se coloca al final de wwwroot/plantilla/css/gatonegro.css
+   ============================================================ */
+
+
+    .hero-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Ocupa todo el espacio sin deformarse */
+        object-position: center 25%;
+        transition: transform 6s ease; /* Efecto Ken Burns */
+    }
+
+    .hero-slide:hover img {
+        transform: scale(1.06);
+    }
+
+/* 2. Categoría (Arriba a la izquierda) */
+.hero-slide .hero-categoria {
+    position: absolute;
+    top: 1.5rem; /* 24px */
+    left: 1.5rem; /* 24px */
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 30px;
+    background: var(--bs-primary); /* Color primario del tema */
+    color: var(--bs-dark);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+    margin-bottom: 1.5rem; /* Margen inferior para separarlo del título si están en el mismo flujo */
+}
+
+/* Forzamos separación al título en PC por si comparte contenedor */
+.hero-slide .hero-info .hero-titulo,
+.hero-slide .hero-titulo {
+    margin-top: 1rem; /* Margen hacia arriba para que no se pegue */
+}
+
+    /* 3. Etiqueta de oferta/descuento (Arriba a la derecha) */
+    .hero-slide .hero-etiqueta {
+        position: absolute;
+        top: 1.5rem; /* 24px */
+        right: 1.5rem; /* 24px */
+        z-index: 3;
+        padding: 8px 16px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: #fff;
+        background: #1e8449; /* Verde de oferta por defecto */
+        border-radius: 6px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
+    }
+
+    /* 4. Bloque de información principal (Abajo con degradado) */
+    .hero-slide .hero-info {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; /* Alineación a la izquierda */
+        padding: 48px 30px 28px; /* Más espacio superior para el degradado */
+        color: #fff;
+        /* Degradado limpio de oscuro a transparente para que el texto destaque */
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.5) 65%, transparent 100%);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6); /* Sombra de texto para legibilidad */
+    }
+
+    .hero-slide .hero-titulo {
+        margin: 0;
+        font-size: 28px;
+        color: #fff;
+        line-height: 1.2;
+        font-weight: 700; /* Asegurar grosor */
+    }
+
+    .hero-slide .hero-precio {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+.hero-slide .hero-precio-actual {
+    font-size: 34px; /* Un poco más grande el precio actual */
+    font-weight: 600;
+    color: #ffffff; /* Color blanco para el precio */
+    line-height: 1;
+}
+
+    .hero-slide .hero-precio-anterior {
+        font-size: 18px;
+        color: rgba(255, 255, 255, .75); /* Algo más visible que en la versión anterior */
+        text-decoration: line-through;
+    }
+
+    .hero-slide .hero-oferta {
+        display: block;
+        margin-top: 8px;
+        font-size: 15px;
+        color: var(--bs-primary);
+    }
+
+    .hero-slide .hero-vermas {
+        display: inline-block;
+        margin-top: 16px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #fff;
+        opacity: 0.9;
+        transition: .3s;
+    }
+
+    .hero-slide:hover .hero-vermas {
+        color: var(--bs-primary);
+        opacity: 1;
+    }
+
+        .hero-slide:hover .hero-vermas i {
+            transform: translateX(6px);
+        }
+
+/* Estilos para la barra inferior mobile tipo app */
+@media (max-width: 991.98px) {
+    /* Agregamos margen inferior al body para que el contenido no quede oculto detrás de la barra fija */
+    body {
+        padding-bottom: 60px;
+    }
+
+    .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background-color: var(--bs-light, #f8f9fa);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1030;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 10px;
+        text-decoration: none;
+        padding: 4px 0;
+        transition: color 0.2s ease;
+    }
+
+        .mobile-nav-item i {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .mobile-nav-item.active,
+        .mobile-nav-item:hover {
+            color: var(--bs-primary, #0d6efd);
+        }
+}
+
+.hero-slide {
+    position: relative; /* Esencial para que el .hero-info con absolute se quede dentro */
+    width: 100%;
+    overflow: hidden;
+    /* Añade aquí cualquier otra propiedad que estuviera repartida en las líneas 2104 o 2237 */
+}
+
+/* ---------- Ajustes para Mobile (Responsivo) ---------- */
+/* Es vital incluir esto para que en celulares no se rompa el diseño */
+@media (max-width: 767.98px) {
+    .hero-slide {
+        min-height: 28rem; /* Un poco más alto para que entre la info */
+    }
+
+        /* Reajustamos el tamaño de fuente para móviles */
+        .hero-slide .hero-categoria {
+            top: 1rem;
+            left: 1rem;
+            font-size: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 1rem; /* <--- Agregado para separar la categoría hacia arriba del contenido/título */
+            display: inline-block; /* <--- Vital para que respete el margen superior */
+        }
+
+        .hero-slide .hero-etiqueta {
+            top: 1rem;
+            right: 1rem;
+            font-size: 12px;
+        }
+
+        .hero-slide .hero-info {
+            padding: 36px 1rem 1rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 45%, transparent);
+        }
+
+        .hero-slide .hero-titulo {
+            font-size: 20px;
+            margin-top: 0.5rem; /* <--- Asegura aire extra arriba del título si lo requiere */
+        }
+
+        .hero-slide .hero-precio-actual {
+            font-size: 24px;
+        }
+
+        .hero-slide .hero-precio-anterior {
+            font-size: 16px;
+        }
+
+        .hero-slide .hero-vermas {
+            font-size: 12px;
+            margin-top: 12px;
+        }
 }

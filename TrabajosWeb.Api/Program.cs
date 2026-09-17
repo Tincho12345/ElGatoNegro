@@ -17,6 +17,9 @@ builder.Services.Configure<JwtSettings>(
 builder.Services.Configure<UploadSettings>(
     builder.Configuration.GetSection(UploadSettings.SectionName));
 
+builder.Services.Configure<VapidSettings>(
+    builder.Configuration.GetSection(VapidSettings.SectionName));
+
 var jwtSettings = builder.Configuration
     .GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("Falta la sección Jwt en la configuración.");
@@ -121,6 +124,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioActualService, UsuarioActualService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 
 var app = builder.Build();
 
@@ -148,8 +152,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
-
-
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "MiApp API v1");
     });

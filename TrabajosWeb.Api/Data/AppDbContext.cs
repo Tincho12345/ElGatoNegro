@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TrabajosWeb.Api.Entities;
 using TrabajosWeb.Api.Services;
 using TrabajosWeb.Shared.Helpers;
@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<Subcategoria> Subcategorias => Set<Subcategoria>();
     public DbSet<Marca> Marcas => Set<Marca>();
     public DbSet<AjustesSitio> AjustesSitio => Set<AjustesSitio>();
+    public DbSet<SuscripcionPush> SuscripcionesPush => Set<SuscripcionPush>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -103,6 +104,12 @@ public class AppDbContext : DbContext
         // El precio se filtra por rango en la galería de productos.
         modelBuilder.Entity<Trabajo>()
             .HasIndex(t => t.Precio);
+
+        // Un mismo dispositivo no puede quedar suscripto dos veces: el
+        // endpoint que entrega el navegador ya es único por sí mismo.
+        modelBuilder.Entity<SuscripcionPush>()
+            .HasIndex(s => s.Endpoint)
+            .IsUnique();
 
         modelBuilder.Entity<RefreshToken>()
             .Ignore(r => r.EstaActivo);
