@@ -1,7 +1,4 @@
-// Service worker de notificaciones push. Se registra solo cuando alguien
-// activa las notificaciones desde el panel; un visitante del sitio público
-// nunca dispara esto.
-
+// Service worker de notificación push con aviso instantáneo a las pestañas
 self.addEventListener('push', function (event) {
     var datos = {};
 
@@ -12,33 +9,39 @@ self.addEventListener('push', function (event) {
     }
 
     var titulo = datos.title || 'Gato Negro';
+    // Fallback de texto para asegurar que siempre haya contenido visual en el Toast
+    var cuerpo = datos.body || '¡Tenés una nueva consulta en la peluquería!';
 
     var opciones = {
-        body: datos.body || '',
+        body: cuerpo,
         icon: '/img/gato-negro.png',
         badge: '/img/gato-negro.png',
         data: { url: datos.url || '/Admin/Consultas' },
-        // Mismo tag: una notificación nueva reemplaza a la anterior en vez
-        // de apilarse si llegan varias seguidas.
         tag: 'gatonegro-aviso',
         renotify: true,
-        // Propiedades para forzar mayor visibilidad y banner en pantalla
         requireInteraction: true,
         vibrate: [200, 100, 200]
     };
 
-    event.waitUntil(self.registration.showNotification(titulo, opciones));
+    // Muestra la notificación y además le avisa a todas las pestañas abiertas que actualicen el contador al instante
+    event.waitUntil(
+        self.registration.showNotification(titulo, opciones).then(function () {
+            return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+                clientList.forEach(function (client) {
+                    client.postMessage({ tipo: 'actualizar-contador' });
+                });
+            });
+        })
+    );
 });
 
-// Al tocar la notificación, se enfoca una pestaña del panel ya abierta si
-// existe; si no, se abre una nueva orientada a la URL de destino.
+// Al tocar la notificación, se enfoca una pestaña del panel ya abierta o se abre una nueva
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
     var urlDestino = (event.notification.data && event.notification.data.url) || '/Admin/Consultas';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-            // Si ya hay una pestaña abierta del sitio, la trae al frente y la redirige si es necesario
             for (var i = 0; i < clientList.length; i++) {
                 var client = clientList[i];
                 if ('focus' in client) {
@@ -49,7 +52,6 @@ self.addEventListener('notificationclick', function (event) {
                     return;
                 }
             }
-            // Si no hay ninguna pestaña abierta, abre una nueva directamente en la sección
             if (clients.openWindow) {
                 return clients.openWindow(urlDestino);
             }

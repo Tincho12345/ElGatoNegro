@@ -1,17 +1,11 @@
 // Activa o desactiva las notificaciones push del panel y mantiene
 // sincronizadas todas las campanitas que haya en la página (la de
 // escritorio en el navbar y la de la barra inferior en mobile).
-// Solo hace algo si existe al menos un botón .boton-notificaciones, y esos
-// botones solo se renderizan dentro del panel de admin, así que en el
-// sitio público este script no hace nada.
 (function () {
-    // Limitamos la selección únicamente al botón que está dentro del navbar para activar/desactivar
     var botones = Array.prototype.slice.call(document.querySelectorAll('.navbar .boton-notificaciones'));
     if (!botones.length) return;
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        // Navegador viejo o sin soporte: mejor ocultar los botones que
-        // mostrar algo que nunca va a funcionar.
         botones.forEach(function (boton) { boton.hidden = true; });
         return;
     }
@@ -36,7 +30,6 @@
                 ? 'Notificaciones activadas (tocá para desactivar)'
                 : 'Activar notificaciones de consultas nuevas';
 
-            // Cambiar el ícono entre campanita normal y tachada
             var icono = boton.querySelector('i');
             if (icono) {
                 icono.className = activo ? 'fa-solid fa-bell' : 'fa-solid fa-bell-slash';
@@ -91,8 +84,6 @@
     }
 
     // ---------- Contador de consultas sin leer ----------
-    // Una sola función, un solo endpoint: actualiza todos los badges
-    // (escritorio + mobile) a la vez, para no duplicar la lógica.
     function actualizarContador() {
         fetch('/Notificaciones/no-leidas')
             .then(function (r) { return r.ok ? r.json() : null; })
@@ -109,9 +100,7 @@
                     }
                 });
             })
-            .catch(function () {
-                // Sin poder consultar el contador, se deja como estaba.
-            });
+            .catch(function () { });
     }
 
     function estadoInicial() {
@@ -119,10 +108,7 @@
             .then(function () { return navigator.serviceWorker.ready; })
             .then(function (registro) { return registro.pushManager.getSubscription(); })
             .then(function (suscripcion) { pintar(!!suscripcion); })
-            .catch(function () {
-                // Sin poder consultar el estado, los botones quedan como
-                // estaban (apagados) para que el usuario pueda reintentar.
-            });
+            .catch(function () { });
 
         actualizarContador();
         setInterval(actualizarContador, 60000);
@@ -233,6 +219,15 @@
                 } else {
                     e.preventDefault();
                 }
+            }
+        });
+    }
+
+    // ---------- Escuchar avisos en tiempo real del Service Worker ----------
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', function (event) {
+            if (event.data && event.data.tipo === 'actualizar-contador') {
+                actualizarContador();
             }
         });
     }

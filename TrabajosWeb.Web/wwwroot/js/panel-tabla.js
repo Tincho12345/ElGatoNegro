@@ -14,6 +14,8 @@
     var limpiar = barra.querySelector('#limpiarFila');
     var botonVoz = barra.querySelector('#dictarFila');
     var selCategoria = barra.querySelector('#filtroCategoria');
+    var selSubcategoria = barra.querySelector('#filtroSubcategoria'); // <-- NUEVO
+    var selMarca = barra.querySelector('#filtroMarca'); // <-- NUEVO
     var selEstado = barra.querySelector('#filtroEstado');
     var selOrden = barra.querySelector('#ordenTabla');
     var cuenta = barra.querySelector('#cuentaFilas');
@@ -58,11 +60,18 @@
             return false;
         }
 
+        if (selSubcategoria && selSubcategoria.value && tr.dataset.subcategoria !== selSubcategoria.value) {
+            return false;
+        }
+
+        if (selMarca && selMarca.value && tr.dataset.marca !== selMarca.value) {
+            return false;
+        }
+
         if (selEstado && selEstado.value && tr.dataset.publicado !== selEstado.value) {
             return false;
         }
 
-        // Todas las palabras tienen que estar; el orden no importa.
         var donde = tr.dataset.buscar || '';
 
         for (var i = 0; i < palabras.length; i++) {
@@ -196,7 +205,7 @@
         });
     }
 
-    [selCategoria, selEstado, selOrden].forEach(function (sel) {
+    [selCategoria, selSubcategoria, selMarca, selEstado, selOrden].forEach(function (sel) {
         if (sel) sel.addEventListener('change', aplicar);
     });
 

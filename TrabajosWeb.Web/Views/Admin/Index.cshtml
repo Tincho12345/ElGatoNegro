@@ -101,6 +101,24 @@
                     }
                 </select>
 
+                <!-- NUEVO: Filtro por Subcategoría -->
+                <select id="filtroSubcategoria" class="form-select form-select-sm" aria-label="Filtrar por subcategoría">
+                    <option value="">Todas las subcategorías</option>
+                    @foreach (var sub in Model.Subcategorias.OrderBy(s => s.Nombre))
+                    {
+                        <option value="@sub.Slug">@sub.Nombre</option>
+                    }
+                </select>
+
+                <!-- NUEVO: Filtro por Marca -->
+                <select id="filtroMarca" class="form-select form-select-sm" aria-label="Filtrar por marca">
+                    <option value="">Todas las marcas</option>
+                    @foreach (var marca in Model.Marcas.OrderBy(m => m.Nombre))
+                    {
+                        <option value="@marca.Slug">@marca.Nombre</option>
+                    }
+                </select>
+
                 <select id="filtroEstado" class="form-select form-select-sm" aria-label="Filtrar por estado">
                     <option value="">Todos</option>
                     <option value="1">Publicados</option>
@@ -171,11 +189,13 @@
 
                                     var actualizado = trabajo.ModifiedDate ?? trabajo.CreatedDate;
 
-                                    <tr data-buscar="@textoBusqueda"
-                                        data-categoria="@trabajo.CategoriaSlug"
-                                        data-publicado="@(trabajo.Publicado ? "1" : "0")"
-                                        data-titulo="@Normalizar(trabajo.Titulo)"
-                                        data-fecha="@actualizado.ToString("s")">
+                                        <tr data-buscar="@textoBusqueda"
+                                            data-categoria="@trabajo.CategoriaSlug"
+                                            data-subcategoria="@trabajo.SubcategoriaSlug"
+                                            data-marca="@trabajo.MarcaSlug"
+                                            data-publicado="@(trabajo.Publicado ? "1" : "0")"
+                                            data-titulo="@Normalizar(trabajo.Titulo)"
+                                            data-fecha="@actualizado.ToString("s")">
                                         <td>
                                             @if (portada is not null)
                                             {
@@ -245,6 +265,7 @@
 </div>
 
 @section Estilos {
+@* 
     <style>
         /* ---------- Buscador y filtros de la tabla ---------- */
         .filtros-panel {
@@ -383,6 +404,7 @@
             color: #fff !important;
         }
     </style>
+ *@
 }
 @functions {
     /// <summary>

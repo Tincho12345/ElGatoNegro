@@ -7,6 +7,8 @@ public class PanelViewModel
 {
     public List<TrabajoDto> Trabajos { get; set; } = new();
     public List<CategoriaDto> Categorias { get; set; } = new();
+    public List<SubcategoriaDto> Subcategorias { get; set; } = new(); // <-- NUEVO
+    public List<MarcaDto> Marcas { get; set; } = new();             // <-- NUEVO
     public int ConsultasSinLeer { get; set; }
     public string ApiBaseUrl { get; set; } = string.Empty;
 }

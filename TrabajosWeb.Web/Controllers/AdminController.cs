@@ -32,12 +32,16 @@ public class AdminController : Controller
     {
         var trabajos = await _api.GetAsync<List<TrabajoDto>>("api/Trabajos/admin", ct) ?? new();
         var categorias = await _api.GetAsync<List<CategoriaDto>>("api/Categorias/admin", ct) ?? new();
+        var Subcategorias = await _api.GetAsync<List<SubcategoriaDto>>("api/Subcategorias/admin", ct) ?? new();
+        var Marcas = await _api.GetAsync<List<MarcaDto>>("api/Marcas/admin", ct) ?? new();
         var consultas = await _api.GetAsync<List<ConsultaDto>>("api/Consultas?soloNoLeidas=true", ct) ?? new();
 
         return View(new PanelViewModel
         {
             Trabajos = trabajos,
             Categorias = categorias,
+            Subcategorias = Subcategorias,
+            Marcas = Marcas,
             ConsultasSinLeer = consultas.Count,
             ApiBaseUrl = _apiBaseUrl
         });
