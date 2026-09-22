@@ -1,18 +1,10 @@
-// Activa o desactiva las notificaciones push del panel y mantiene
-// sincronizadas todas las campanitas que haya en la página (la de
-// escritorio en el navbar y la de la barra inferior en mobile).
+// Activa o desactiva las notificaciones push del panel. Solo hace algo si
+// existe el botón de la campanita (menú hamburguesa), que solo se renderiza
+// dentro del panel de admin, así que en el sitio público este script no
+// hace nada. La campanita de la barra inferior es solo un acceso directo a
+// Consultas y no pasa por acá.
 (function () {
-    var botones = Array.prototype.slice.call(document.querySelectorAll('.navbar .boton-notificaciones'));
-    if (!botones.length) return;
-
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        botones.forEach(function (boton) { boton.hidden = true; });
-        return;
-    }
-
-    function esBotonEscritorio(boton) {
-        return boton.classList.contains('btn');
-    }
+    var boton = document.querySelector('.boton-notificaciones');
 
     function base64UrlABytes(base64Url) {
         var relleno = '='.repeat((4 - (base64Url.length % 4)) % 4);
@@ -24,46 +16,33 @@
     }
 
     function pintar(activo) {
-        botones.forEach(function (boton) {
-            boton.setAttribute('aria-pressed', activo ? 'true' : 'false');
-            boton.title = activo
-                ? 'Notificaciones activadas (tocá para desactivar)'
-                : 'Activar notificaciones de consultas nuevas';
+        if (!boton) return;
+        boton.classList.toggle('btn-outline-primary', !activo);
+        boton.classList.toggle('btn-primary', activo);
+        boton.setAttribute('aria-pressed', activo ? 'true' : 'false');
+        boton.title = activo
+            ? 'Notificaciones activadas (tocá para desactivar)'
+            : 'Notificaciones desactivadas (tocá para activar)';
 
-            var icono = boton.querySelector('i');
-            if (icono) {
-                icono.className = activo ? 'fa-solid fa-bell' : 'fa-solid fa-bell-slash';
-            }
-
-            if (esBotonEscritorio(boton)) {
-                boton.classList.toggle('btn-outline-primary', !activo);
-                boton.classList.toggle('btn-primary', activo);
-            } else {
-                boton.classList.toggle('active', activo);
-            }
-        });
-    }
-
-    function estaActivo() {
-        return botones[0].getAttribute('aria-pressed') === 'true';
-    }
-
-    function deshabilitar(deshabilitado) {
-        botones.forEach(function (boton) { boton.disabled = deshabilitado; });
+        var icono = boton.querySelector('i');
+        if (icono) {
+            icono.classList.toggle('fa-bell', activo);
+            icono.classList.toggle('fa-bell-slash', !activo);
+        }
     }
 
     function navegadorLegible() {
         var ua = navigator.userAgent;
         var nav = /Edg/.test(ua) ? 'Edge'
             : /Chrome/.test(ua) ? 'Chrome'
-                : /Firefox/.test(ua) ? 'Firefox'
-                    : /Safari/.test(ua) ? 'Safari'
-                        : 'Navegador';
+            : /Firefox/.test(ua) ? 'Firefox'
+            : /Safari/.test(ua) ? 'Safari'
+            : 'Navegador';
         var so = /Windows/.test(ua) ? 'Windows'
             : /Android/.test(ua) ? 'Android'
-                : /iPhone|iPad/.test(ua) ? 'iOS'
-                    : /Mac/.test(ua) ? 'Mac'
-                        : '';
+            : /iPhone|iPad/.test(ua) ? 'iOS'
+            : /Mac/.test(ua) ? 'Mac'
+            : '';
         return so ? nav + ' en ' + so : nav;
     }
 
@@ -84,6 +63,9 @@
     }
 
     // ---------- Contador de consultas sin leer ----------
+    // Una sola función, un solo endpoint: actualiza todos los badges que
+    // haya en la página (escritorio + acceso directo de la barra inferior),
+    // sin duplicar la lógica en cada uno.
     function actualizarContador() {
         fetch('/Notificaciones/no-leidas')
             .then(function (r) { return r.ok ? r.json() : null; })
@@ -100,7 +82,31 @@
                     }
                 });
             })
-            .catch(function () { });
+            .catch(function () {
+                // Sin poder consultar el contador, se deja como estaba.
+            });
+    }
+
+    actualizarContador();
+    setInterval(actualizarContador, 60000);
+
+    // El service worker avisa al instante cuando llega una consulta nueva
+    // o cuando se marca una como leída desde la propia notificación.
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', function (event) {
+            if (event.data && event.data.tipo === 'actualizar-contador') {
+                actualizarContador();
+            }
+        });
+    }
+
+    if (!boton) return;
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        // Navegador viejo o sin soporte: mejor ocultar el botón que
+        // mostrar algo que nunca va a funcionar.
+        boton.hidden = true;
+        return;
     }
 
     function estadoInicial() {
@@ -108,10 +114,10 @@
             .then(function () { return navigator.serviceWorker.ready; })
             .then(function (registro) { return registro.pushManager.getSubscription(); })
             .then(function (suscripcion) { pintar(!!suscripcion); })
-            .catch(function () { });
-
-        actualizarContador();
-        setInterval(actualizarContador, 60000);
+            .catch(function () {
+                // Sin poder consultar el estado, el botón queda como estaba
+                // (apagado) para que el usuario pueda reintentar.
+            });
     }
 
     function activar() {
@@ -171,66 +177,37 @@
             });
     }
 
-    botones.forEach(function (boton) {
-        boton.addEventListener('click', function () {
-            deshabilitar(true);
+    boton.addEventListener('click', function () {
+        boton.disabled = true;
 
-            var yaActivo = estaActivo();
-            var accion;
+        var yaActivo = boton.classList.contains('btn-primary');
+        var accion;
 
-            if (yaActivo) {
-                accion = desactivar();
-            } else if (Notification.permission === 'denied') {
-                accion = Promise.reject('bloqueado');
-            } else {
-                accion = activar();
-            }
+        if (yaActivo) {
+            accion = desactivar();
+        } else if (Notification.permission === 'denied') {
+            accion = Promise.reject('bloqueado');
+        } else {
+            accion = activar();
+        }
 
-            accion
-                .catch(function (motivo) {
-                    pintar(false);
+        accion
+            .catch(function (motivo) {
+                pintar(false);
 
-                    if (motivo === 'bloqueado') {
-                        avisar('warning', 'Notificaciones bloqueadas',
-                            'Las bloqueaste antes en este navegador. Para activarlas, habilitalas ' +
-                            'desde el candado o el ícono de sitio en la barra de direcciones.');
-                    } else {
-                        avisar('error', 'No se pudo activar',
-                            'Probá de nuevo en un momento.');
-                    }
-                })
-                .finally(function () {
-                    deshabilitar(false);
-                });
-        });
-    });
-
-    // ---------- Redirección de la campanita móvil al hacer clic con avisos pendientes ----------
-    var botonMobileNoti = document.querySelector('.mobile-bottom-nav .boton-notificaciones');
-    if (botonMobileNoti) {
-        botonMobileNoti.addEventListener('click', function (e) {
-            var badge = botonMobileNoti.querySelector('.badge-notificaciones');
-            if (badge) {
-                var texto = badge.textContent.trim();
-                var cantidad = texto === '99+' ? 100 : (parseInt(texto, 10) || 0);
-
-                if (cantidad > 0) {
-                    window.location.href = '/Admin/Consultas';
+                if (motivo === 'bloqueado') {
+                    avisar('warning', 'Notificaciones bloqueadas',
+                        'Las bloqueaste antes en este navegador. Para activarlas, habilitalas ' +
+                        'desde el candado o el ícono de sitio en la barra de direcciones.');
                 } else {
-                    e.preventDefault();
+                    avisar('error', 'No se pudo activar',
+                        'Probá de nuevo en un momento.');
                 }
-            }
-        });
-    }
-
-    // ---------- Escuchar avisos en tiempo real del Service Worker ----------
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener('message', function (event) {
-            if (event.data && event.data.tipo === 'actualizar-contador') {
-                actualizarContador();
-            }
-        });
-    }
+            })
+            .finally(function () {
+                boton.disabled = false;
+            });
+    });
 
     estadoInicial();
 })();

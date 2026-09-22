@@ -6,11 +6,13 @@ using TrabajosWeb.Web.Services;
 namespace TrabajosWeb.Web.Controllers;
 
 /// <summary>
-/// Puente entre el navegador y la API para las notificaciones push. El
-/// navegador no tiene a mano el token de la API —vive del lado del
-/// servidor, en la cookie de sesión de acá— así que estas acciones se lo
-/// agregan por él, igual que hace IApiClient con cualquier otra llamada
-/// del panel.
+/// Puente entre el navegador (o el service worker) y la API para las
+/// notificaciones push. El navegador no tiene a mano el token de la API
+/// —vive del lado del servidor, en la cookie de sesión de acá— así que
+/// estas acciones se lo agregan por él, igual que hace IApiClient con
+/// cualquier otra llamada del panel. Ninguna lleva antiforgery token
+/// porque se llaman por fetch, no desde un formulario (incluido el fetch
+/// que hace el propio service worker al tocar un botón de la notificación).
 /// </summary>
 [Authorize(Policy = "SoloAdmin")]
 [Route("Notificaciones")]
@@ -61,5 +63,16 @@ public class NotificacionesController : Controller
     {
         var lista = await _api.GetAsync<List<ConsultaDto>>("api/Consultas?soloNoLeidas=true", ct);
         return Ok(new { cantidad = lista?.Count ?? 0 });
+    }
+
+    /// <summary>
+    /// La usa el botón "Marcar como leída" de la notificación push, desde
+    /// el service worker, sin abrir ninguna pestaña del panel.
+    /// </summary>
+    [HttpPost("marcar-leida/{id:guid}")]
+    public async Task<IActionResult> MarcarLeida(Guid id, CancellationToken ct)
+    {
+        await _api.PatchAsync($"api/Consultas/{id}/leida", ct);
+        return Ok();
     }
 }

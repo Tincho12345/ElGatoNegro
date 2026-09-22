@@ -1,6 +1,7 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using TrabajosWeb.Web.Helpers;
 
 namespace TrabajosWeb.Web.Services;
 
@@ -25,23 +26,32 @@ public class ApiClient : IApiClient
     /// <summary>
     /// Adjunta el token guardado en la cookie de autenticación, si existe.
     /// Los endpoints públicos simplemente van sin header.
+    ///
+    /// Devuelve si había token: un 401 sin token adjunto es un login con
+    /// credenciales incorrectas, no una sesión vencida, y no puede tratarse
+    /// igual.
     /// </summary>
-    private void AplicarToken()
+    private bool AplicarToken()
     {
         var token = _accessor.HttpContext?.User?.FindFirst("AccessToken")?.Value;
 
         _http.DefaultRequestHeaders.Authorization = string.IsNullOrEmpty(token)
             ? null
             : new AuthenticationHeaderValue("Bearer", token);
+
+        return !string.IsNullOrEmpty(token);
     }
 
     public async Task<T?> GetAsync<T>(string ruta, CancellationToken ct = default)
     {
-        AplicarToken();
+        var habiaToken = AplicarToken();
 
         try
         {
             var respuesta = await _http.GetAsync(ruta, ct);
+
+            if (habiaToken && respuesta.StatusCode == HttpStatusCode.Unauthorized)
+                throw new SesionExpiradaException();
 
             if (!respuesta.IsSuccessStatusCode)
             {
@@ -61,11 +71,14 @@ public class ApiClient : IApiClient
     public async Task<(bool Ok, TRespuesta? Datos, string? Error)> PostAsync<TRespuesta>(
         string ruta, object cuerpo, CancellationToken ct = default)
     {
-        AplicarToken();
+        var habiaToken = AplicarToken();
 
         try
         {
             var respuesta = await _http.PostAsJsonAsync(ruta, cuerpo, ct);
+
+            if (habiaToken && respuesta.StatusCode == HttpStatusCode.Unauthorized)
+                throw new SesionExpiradaException();
 
             if (respuesta.IsSuccessStatusCode)
             {
@@ -84,11 +97,15 @@ public class ApiClient : IApiClient
 
     public async Task<(bool Ok, string? Error)> PutAsync(string ruta, object cuerpo, CancellationToken ct = default)
     {
-        AplicarToken();
+        var habiaToken = AplicarToken();
 
         try
         {
             var respuesta = await _http.PutAsJsonAsync(ruta, cuerpo, ct);
+
+            if (habiaToken && respuesta.StatusCode == HttpStatusCode.Unauthorized)
+                throw new SesionExpiradaException();
+
             return respuesta.IsSuccessStatusCode
                 ? (true, null)
                 : (false, await LeerErrorAsync(respuesta, ct));
@@ -102,11 +119,15 @@ public class ApiClient : IApiClient
 
     public async Task<(bool Ok, string? Error)> PatchAsync(string ruta, CancellationToken ct = default)
     {
-        AplicarToken();
+        var habiaToken = AplicarToken();
 
         try
         {
             var respuesta = await _http.PatchAsync(ruta, null, ct);
+
+            if (habiaToken && respuesta.StatusCode == HttpStatusCode.Unauthorized)
+                throw new SesionExpiradaException();
+
             return respuesta.IsSuccessStatusCode
                 ? (true, null)
                 : (false, await LeerErrorAsync(respuesta, ct));
@@ -120,11 +141,15 @@ public class ApiClient : IApiClient
 
     public async Task<(bool Ok, string? Error)> DeleteAsync(string ruta, CancellationToken ct = default)
     {
-        AplicarToken();
+        var habiaToken = AplicarToken();
 
         try
         {
             var respuesta = await _http.DeleteAsync(ruta, ct);
+
+            if (habiaToken && respuesta.StatusCode == HttpStatusCode.Unauthorized)
+                throw new SesionExpiradaException();
+
             return respuesta.IsSuccessStatusCode
                 ? (true, null)
                 : (false, await LeerErrorAsync(respuesta, ct));
@@ -139,7 +164,7 @@ public class ApiClient : IApiClient
     public async Task<(bool Ok, string? Error)> PostArchivosAsync(
         string ruta, IEnumerable<IFormFile> archivos, CancellationToken ct = default)
     {
-        AplicarToken();
+        var habiaToken = AplicarToken();
 
         using var contenido = new MultipartFormDataContent();
 
@@ -156,6 +181,10 @@ public class ApiClient : IApiClient
         try
         {
             var respuesta = await _http.PostAsync(ruta, contenido, ct);
+
+            if (habiaToken && respuesta.StatusCode == HttpStatusCode.Unauthorized)
+                throw new SesionExpiradaException();
+
             return respuesta.IsSuccessStatusCode
                 ? (true, null)
                 : (false, await LeerErrorAsync(respuesta, ct));
@@ -169,9 +198,6 @@ public class ApiClient : IApiClient
 
     private static async Task<string> LeerErrorAsync(HttpResponseMessage respuesta, CancellationToken ct)
     {
-        if (respuesta.StatusCode == HttpStatusCode.Unauthorized)
-            return "Tu sesión expiró. Iniciá sesión de nuevo.";
-
         try
         {
             var json = await respuesta.Content.ReadAsStringAsync(ct);

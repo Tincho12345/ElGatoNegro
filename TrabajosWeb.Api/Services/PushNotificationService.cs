@@ -25,7 +25,12 @@ public class PushNotificationService : IPushNotificationService
         _logger = logger;
     }
 
-    public async Task NotificarATodosAsync(string titulo, string cuerpo, string url, CancellationToken ct = default)
+    public async Task NotificarATodosAsync(
+        string titulo,
+        string cuerpo,
+        string url,
+        Guid? consultaId = null,
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_vapid.PublicKey) || string.IsNullOrWhiteSpace(_vapid.PrivateKey))
         {
@@ -40,7 +45,7 @@ public class PushNotificationService : IPushNotificationService
         var vapidDetails = new VapidDetails(_vapid.Subject, _vapid.PublicKey, _vapid.PrivateKey);
         var cliente = new WebPushClient();
 
-        var payload = JsonSerializer.Serialize(new { title = titulo, body = cuerpo, url });
+        var payload = JsonSerializer.Serialize(new { title = titulo, body = cuerpo, url, consultaId });
         var vencidas = new List<SuscripcionPush>();
 
         foreach (var suscripcion in suscripciones)

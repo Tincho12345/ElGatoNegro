@@ -26,6 +26,8 @@ public class AppDbContext : DbContext
     public DbSet<Marca> Marcas => Set<Marca>();
     public DbSet<AjustesSitio> AjustesSitio => Set<AjustesSitio>();
     public DbSet<SuscripcionPush> SuscripcionesPush => Set<SuscripcionPush>();
+    public DbSet<Pedido> Pedidos => Set<Pedido>();
+    public DbSet<PedidoItem> PedidoItems => Set<PedidoItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -113,6 +115,29 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<RefreshToken>()
             .Ignore(r => r.EstaActivo);
+
+        // ---------- Pedidos (carrito) ----------
+
+        modelBuilder.Entity<PedidoItem>()
+            .HasOne(i => i.Pedido)
+            .WithMany(p => p.Items)
+            .HasForeignKey(i => i.PedidoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Si el trabajo se borra, el ítem del pedido sobrevive: solo pierde
+        // la referencia (queda con su Titulo/Precio ya fotografiados).
+        modelBuilder.Entity<PedidoItem>()
+            .HasOne(i => i.Trabajo)
+            .WithMany()
+            .HasForeignKey(i => i.TrabajoId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Pedido>()
+            .HasIndex(p => p.CreatedDate);
+
+        modelBuilder.Entity<Pedido>()
+            .HasIndex(p => p.Numero)
+            .IsUnique();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

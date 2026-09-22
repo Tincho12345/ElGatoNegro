@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using TrabajosWeb.Shared.DTOs;
 
 namespace TrabajosWeb.Web.Models;
@@ -10,6 +10,7 @@ public class PanelViewModel
     public List<SubcategoriaDto> Subcategorias { get; set; } = new(); // <-- NUEVO
     public List<MarcaDto> Marcas { get; set; } = new();             // <-- NUEVO
     public int ConsultasSinLeer { get; set; }
+    public int PedidosSinLeer { get; set; }
     public string ApiBaseUrl { get; set; } = string.Empty;
 }
 
@@ -60,4 +61,10 @@ public class ConsultasViewModel
 {
     public List<ConsultaDto> Consultas { get; set; } = new();
     public bool SoloNoLeidas { get; set; }
+}
+
+public class PedidosViewModel
+{
+    public List<PedidoDto> Pedidos { get; set; } = new();
+    public bool SoloNoLeidos { get; set; }
 }

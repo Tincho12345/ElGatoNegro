@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using TrabajosWeb.Web.Configuration;
+using TrabajosWeb.Web.Helpers;
 using TrabajosWeb.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -92,6 +93,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Después de la autenticación: necesita poder cerrar la sesión y redirigir
+app.UseMiddleware<SesionExpiradaMiddleware>();
 
 app.MapControllerRoute(
     name: "default",

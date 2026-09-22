@@ -1,0 +1,148 @@
+@model TrabajosWeb.Web.Models.PedidosViewModel
+@{
+    ViewData["Title"] = "Pedidos";
+    Layout = "_LayoutSalone";
+}
+
+<section class="contenedor seccion">
+    <div class="panel-cabecera">
+        <h1>Pedidos</h1>
+        <div class="fila">
+            <a asp-action="Index" class="boton boton-claro">
+                <i class="fa-solid fa-arrow-left"></i>Volver al panel
+            </a>
+            @if (Model.SoloNoLeidos)
+            {
+                <a asp-action="Pedidos" class="boton boton-borde">Ver todos</a>
+            }
+            else
+            {
+                <a asp-action="Pedidos" asp-route-soloNoLeidos="true" class="boton boton-borde">
+                    Solo sin leer
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (!Model.Pedidos.Any())
+    {
+        <div class="vidrio vacio">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <p>
+                @(Model.SoloNoLeidos
+                    ? "No quedan pedidos sin leer."
+                    : "Todavía no llegaron pedidos desde el carrito.")
+            </p>
+        </div>
+    }
+    else
+    {
+        @foreach (var pedido in Model.Pedidos)
+        {
+            var telefono = new string((pedido.Telefono ?? "").Where(char.IsDigit).ToArray());
+
+            <article class="vidrio consulta @(pedido.Leido ? null : "sin-leer")">
+                <div class="consulta-cabecera">
+                    <span class="consulta-nombre">Pedido N° @pedido.Numero — @pedido.Nombre</span>
+                    <span class="consulta-fecha">
+                        @pedido.CreatedDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        @if (!pedido.Leido)
+                        {
+                            <span class="etiqueta etiqueta-no" style="margin-left:8px;">Sin leer</span>
+                        }
+                    </span>
+                </div>
+
+                <div class="consulta-datos">
+                    <span>@pedido.Telefono</span>
+                </div>
+
+                <div class="pedido-items">
+                    <table class="tabla-pedido">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant.</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in pedido.Items)
+                            {
+                                <tr>
+                                    <td>@item.Titulo</td>
+                                    <td>@item.Cantidad</td>
+                                    <td>@item.Precio.ToString("C0")</td>
+                                    <td>@item.Subtotal.ToString("C0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Total</td>
+                                <td class="fw-bold">@pedido.Total.ToString("C0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(pedido.Nota))
+                {
+                    <div class="consulta-mensaje"><strong>Nota:</strong> @pedido.Nota</div>
+                }
+
+                <div class="consulta-acciones">
+                    @if (telefono.Length >= 8)
+                    {
+                        <a href="https://wa.me/@telefono" target="_blank" rel="noopener"
+                           class="boton boton-whatsapp boton-chico">
+                            <i class="fa-brands fa-whatsapp"></i>Contactar por WhatsApp
+                        </a>
+                    }
+
+                    @if (!pedido.Leido)
+                    {
+                        <form asp-action="MarcarLeidoPedido" method="post" class="en-linea">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@pedido.Id" />
+                            <button type="submit" class="boton boton-borde boton-chico">
+                                <i class="fa-solid fa-check"></i>Marcar leído
+                            </button>
+                        </form>
+                    }
+
+                    <form asp-action="EliminarPedido" method="post" class="en-linea"
+                          data-confirmar="¿Eliminar este pedido?">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@pedido.Id" />
+                        <button type="submit" class="boton boton-peligro boton-chico">
+                            <i class="fa-regular fa-trash-can"></i>Eliminar
+                        </button>
+                    </form>
+                </div>
+            </article>
+        }
+    }
+</section>
+
+@section Estilos {
+    <style>
+        .tabla-pedido {
+            width: 100%;
+            margin: 12px 0;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+            .tabla-pedido th, .tabla-pedido td {
+                padding: 6px 10px;
+                border-bottom: 1px solid rgba(0,0,0,.08);
+                text-align: left;
+            }
+
+            .tabla-pedido th:not(:first-child), .tabla-pedido td:not(:first-child) {
+                text-align: right;
+            }
+    </style>
+}

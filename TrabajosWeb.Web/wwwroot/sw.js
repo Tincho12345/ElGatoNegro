@@ -16,30 +16,48 @@ self.addEventListener('push', function (event) {
         body: cuerpo,
         icon: '/img/gato-negro.png',
         badge: '/img/gato-negro.png',
-        data: { url: datos.url || '/Admin/Consultas' },
+        data: {
+            url: datos.url || '/Admin/Consultas',
+            consultaId: datos.consultaId || null
+        },
         tag: 'gatonegro-aviso',
         renotify: true,
         requireInteraction: true,
-        vibrate: [200, 100, 200]
+        vibrate: [200, 100, 200],
+        actions: [
+            { action: 'ver', title: 'Ver consulta' },
+            { action: 'marcar-leida', title: 'Marcar como leída' }
+        ]
     };
 
     // Muestra la notificación y además le avisa a todas las pestañas abiertas que actualicen el contador al instante
     event.waitUntil(
         self.registration.showNotification(titulo, opciones).then(function () {
-            return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-                clientList.forEach(function (client) {
-                    client.postMessage({ tipo: 'actualizar-contador' });
-                });
-            });
+            return avisarPestanas();
         })
     );
 });
 
-// Al tocar la notificación, se enfoca una pestaña del panel ya abierta o se abre una nueva
+// Al tocar la notificación (o uno de sus botones)
 self.addEventListener('notificationclick', function (event) {
-    event.notification.close();
-    var urlDestino = (event.notification.data && event.notification.data.url) || '/Admin/Consultas';
+    var datos = event.notification.data || {};
+    var urlDestino = datos.url || '/Admin/Consultas';
+    var consultaId = datos.consultaId;
 
+    event.notification.close();
+
+    if (event.action === 'marcar-leida') {
+        if (!consultaId) return;
+
+        // Se marca en el servidor sin abrir ni enfocar ninguna pestaña.
+        event.waitUntil(
+            fetch('/Notificaciones/marcar-leida/' + consultaId, { method: 'POST' })
+                .then(function () { return avisarPestanas(); })
+        );
+        return;
+    }
+
+    // Acción "ver" o clic en el cuerpo: se enfoca una pestaña del panel ya abierta o se abre una nueva
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
             for (var i = 0; i < clientList.length; i++) {
@@ -58,3 +76,11 @@ self.addEventListener('notificationclick', function (event) {
         })
     );
 });
+
+function avisarPestanas() {
+    return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+        clientList.forEach(function (client) {
+            client.postMessage({ tipo: 'actualizar-contador' });
+        });
+    });
+}

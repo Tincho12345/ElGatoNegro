@@ -35,6 +35,7 @@ public class AdminController : Controller
         var Subcategorias = await _api.GetAsync<List<SubcategoriaDto>>("api/Subcategorias/admin", ct) ?? new();
         var Marcas = await _api.GetAsync<List<MarcaDto>>("api/Marcas/admin", ct) ?? new();
         var consultas = await _api.GetAsync<List<ConsultaDto>>("api/Consultas?soloNoLeidas=true", ct) ?? new();
+        var pedidos = await _api.GetAsync<List<PedidoDto>>("api/Pedidos?soloNoLeidos=true", ct) ?? new();
 
         return View(new PanelViewModel
         {
@@ -43,6 +44,7 @@ public class AdminController : Controller
             Subcategorias = Subcategorias,
             Marcas = Marcas,
             ConsultasSinLeer = consultas.Count,
+            PedidosSinLeer = pedidos.Count,
             ApiBaseUrl = _apiBaseUrl
         });
     }
@@ -578,6 +580,40 @@ public class AdminController : Controller
             TempData["Error"] = error ?? "No se pudo eliminar.";
 
         return RedirectToAction(nameof(Consultas));
+    }
+
+    // ---------- Pedidos ----------
+
+    public async Task<IActionResult> Pedidos(bool soloNoLeidos = false, CancellationToken ct = default)
+    {
+        var ruta = soloNoLeidos ? "api/Pedidos?soloNoLeidos=true" : "api/Pedidos";
+        var pedidos = await _api.GetAsync<List<PedidoDto>>(ruta, ct) ?? new();
+
+        return View(new PedidosViewModel
+        {
+            Pedidos = pedidos,
+            SoloNoLeidos = soloNoLeidos
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarLeidoPedido(Guid id, CancellationToken ct)
+    {
+        await _api.PatchAsync($"api/Pedidos/{id}/leido", ct);
+        return RedirectToAction(nameof(Pedidos));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarPedido(Guid id, CancellationToken ct)
+    {
+        var (ok, error) = await _api.DeleteAsync($"api/Pedidos/{id}", ct);
+
+        if (!ok)
+            TempData["Error"] = error ?? "No se pudo eliminar.";
+
+        return RedirectToAction(nameof(Pedidos));
     }
 
     // ---------- Auxiliares ----------

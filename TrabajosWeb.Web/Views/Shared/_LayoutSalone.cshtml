@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] · @sitio.NombreSitio</title>
-    <meta name="description" content="@(sitio.TextoBienvenida ?? "Peluquería. Cortes, color, brushing y tratamientos.")" />
+    <meta name="description" content="@(sitio.TextoBienvenida ?? "Tienda de indumentaria. Camisas, pantalones, abrigos y calzado con las últimas tendencias.")" />
     <link rel="icon" href="~/favicon.ico" />
     <link rel="icon" type="image/png" href="~/img/gato-negro.png" />
 
@@ -32,13 +32,13 @@
     <link href="~/plantilla/css/gatonegro.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/css/panel-modal.css" rel="stylesheet" asp-append-version="true" />
     <script>
-        // Se aplica antes de pintar, para que no haya destello del tema anterior
-        (function () {
-            try {
-                var guardado = localStorage.getItem('tema');
-                if (guardado) document.documentElement.setAttribute('data-tema', guardado);
-            } catch (e) { }
-        })();
+            // Se aplica antes de pintar, para que no haya destello del tema anterior
+            (function() {
+                try {
+                    var guardado = localStorage.getItem('tema');
+                    if (guardado) document.documentElement.setAttribute('data-tema', guardado);
+                } catch (e) { }
+            })();
     </script>
 
     @await RenderSectionAsync("Estilos", required: false)
@@ -65,14 +65,12 @@
 
             <div class="collapse navbar-collapse p-3" id="navbarCollapse">
                 <div class="navbar-nav mx-auto align-items-lg-center">
-                    <!-- Submenú Trabajos / Productos -->
-                    <!-- Submenú Trabajos / Productos Dinámico -->
+                    <!-- Submenú Productos Dinámico -->
                     <div class="nav-item dropdown">
-                        <a href="#" class="nav-link dropdown-toggle @(controlador == "Home" && accion == "Index" ? "active" : null)" data-bs-toggle="dropdown" aria-expanded="false">Trabajos</a>
+                        <a href="#" class="nav-link dropdown-toggle @(controlador == "Home" && accion == "Index" ? "active" : null)" data-bs-toggle="dropdown" aria-expanded="false">Artículos</a>
                         <div class="dropdown-menu m-0 bg-light border-0 shadow-sm">
-                            <a asp-controller="Home" asp-action="Index" class="dropdown-item">Todos los trabajos</a>
+                            <a asp-controller="Home" asp-action="Index" class="dropdown-item">Todos los Artículos</a>
 
-                            @* Verificamos si la vista actual tiene un modelo que contenga categorías (como GaleriaViewModel) *@
                             @if (ViewData.Model is TrabajosWeb.Web.Models.GaleriaViewModel galeriaModel && galeriaModel.Categorias != null)
                             {
                                 @foreach (var cat in galeriaModel.Categorias)
@@ -89,13 +87,8 @@
                             }
                             else
                             {
-                                @* Opciones por defecto si se está en otra sección (como Contacto o Admin) *@
-                                <a asp-controller="Home" asp-action="Index" asp-route-categoria="lavado"
-                                   class="dropdown-item filtro-externo" data-slug="lavado">Lavado</a>
-                                <a asp-controller="Home" asp-action="Index" asp-route-categoria="brushing-y-peinados"
-                                   class="dropdown-item filtro-externo" data-slug="brushing-y-peinados">Brushing y peinados</a>
                                 <a asp-controller="Home" asp-action="Index" asp-route-categoria="productos"
-                                   class="dropdown-item filtro-externo" data-slug="productos">Productos</a>
+                                   class="dropdown-item filtro-externo" data-slug="productos">Artículos</a>
                             }
                         </div>
                     </div>
@@ -126,18 +119,6 @@
                 </div>
 
                 <div class="d-flex align-items-center">
-                    @if (controlador == "Admin")
-                    {
-                        @* Solo dentro del panel: un visitante del sitio no
-                       tiene nada que suscribir. El color se lo cambia
-                       push.js según haya o no una suscripción activa
-                       en este navegador. (Sin contador de mensajes) *@
-                        <button type="button"
-                                class="boton-notificaciones btn btn-sm btn-outline-primary btn-sm-square me-3 position-relative"
-                                aria-pressed="false" title="Activar notificaciones de consultas nuevas">
-                            <i class="fa-solid fa-bell"></i>
-                        </button>
-                    }
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <form asp-controller="Cuenta" asp-action="Logout" method="post" class="m-0 me-3">
@@ -145,6 +126,26 @@
                             <button type="submit" class="btn btn-sm btn-primary text-uppercase">Cerrar sesión</button>
                         </form>
                     }
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @* En cualquier vista mientras el admin esté logueado,
+                       no solo dentro del panel: un visitante del sitio no
+                       tiene nada que suscribir. El color se lo cambia
+                       push.js según haya o no una suscripción activa
+                       en este navegador. *@
+                        <button type="button"
+                                class="boton-notificaciones btn btn-sm btn-outline-primary btn-sm-square me-3 position-relative"
+                                aria-pressed="false" title="Activar notificaciones de consultas nuevas">
+                            <i class="fa-solid fa-bell"></i>
+                        </button>
+                    }
+                    <!-- Botón del carrito en el navbar -->
+                    <a href="#" id="abrirModalCarrito" class="btn btn-primary btn-sm-square position-relative me-3" title="Ver Carrito">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span id="contadorCarrito" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; display: none;">
+                            0
+                        </span>
+                    </a>
                     @if (!string.IsNullOrWhiteSpace(sitio.Facebook))
                     {
                         <a class="btn btn-primary btn-sm-square me-3" href="@sitio.Facebook"
@@ -176,6 +177,55 @@
                 </div>
             </div>
         </nav>
+    </div>
+
+    <!-- Modal del carrito de compras -->
+    <div class="modal fade" id="modalCarrito" tabindex="-1" aria-labelledby="modalCarritoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title font-dancing-script text-primary fs-2" id="modalCarritoLabel">Tu Carrito de Compras</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="carritoContenidoVacio" class="text-center py-5">
+                        <i class="fa-solid fa-cart-shopping fa-3x text-muted mb-3"></i>
+                        <p class="fs-5 text-muted">Tu carrito está vacío.</p>
+                    </div>
+
+                    <div id="carritoContenidoLleno" class="table-responsive" style="display: none;">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Precio</th>
+                                    <th>Cant.</th>
+                                    <th>Subtotal</th>
+                                    <th><i class="fa-solid fa-trash-can"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCarritoCuerpo">
+                                <!-- Los items se cargan dinámicamente con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer flex-column align-items-stretch bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-3" id="contenedorTotal" style="display: none;">
+                        <span class="fs-5 fw-bold">Total a Pagar:</span>
+                        <span id="carritoTotalMonto" class="fs-4 fw-bold text-primary">$0</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-danger w-50" id="btnVaciarCarrito">
+                            <i class="fa-solid fa-trash me-2"></i>Vaciar Carrito
+                        </button>
+                        <button type="button" class="btn btn-success w-50 text-uppercase" id="btnFinalizarPedido">
+                            <i class="fa-solid fa-check me-2"></i>Confirmar Pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @* Avisos manejados por SweetAlert *@
@@ -255,7 +305,7 @@
                 </div>
                 <div class="col-lg-6 ps-lg-5">
                     <h5 class="text-primary mb-4">Navegación</h5>
-                    <a class="btn btn-link" asp-controller="Home" asp-action="Index">Trabajos</a>
+                    <a class="btn btn-link" asp-controller="Home" asp-action="Index">Artículos</a>
                     <a class="btn btn-link" asp-controller="Home" asp-action="Contacto">Contacto</a>
                     @if (sitio.TieneWhatsApp)
                     {
@@ -282,7 +332,15 @@
 
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top" data-sin-transicion><i class="bi bi-arrow-up"></i></a>
 
-    <!-- Barra de Navegacion Inferior para Mobile (Estilo App / Mercado Libre) -->
+    @if (sitio.TieneWhatsApp)
+    {
+        <a href="@sitio.LinkWhatsApp" target="_blank" rel="noopener"
+           class="wa-flotante" aria-label="Escribinos por WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+    }
+
+    <!-- Barra de Navegación Inferior para Mobile (Estilo App / Mercado Libre) -->
     <nav class="mobile-bottom-nav d-lg-none">
         <a asp-controller="Home" asp-action="Index" class="mobile-nav-item @(controlador == "Home" && accion == "Index" ? "active" : null)">
             <i class="fa-solid fa-house"></i>
@@ -290,11 +348,15 @@
         </a>
         <a href="#" class="mobile-nav-item" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-expanded="false">
             <i class="fa-solid fa-list"></i>
-            <span>Menu</span>
+            <span>Menú</span>
         </a>
-        <a asp-controller="Home" asp-action="Contacto" class="mobile-nav-item @(controlador == "Home" && accion == "Contacto" ? "active" : null)">
-            <i class="fa-solid fa-envelope"></i>
-            <span>Contacto</span>
+        <!-- Botón de carrito inferior, mismo id para sincronizar el contador -->
+        <a href="#" id="abrirModalCarritoMobile" class="mobile-nav-item position-relative" title="Ver Carrito">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="contadorCarritoMobile" class="position-absolute top-25 start-50 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; display: none;">
+                0
+            </span>
+            <span>Carrito</span>
         </a>
         @if (User.Identity?.IsAuthenticated == true)
         {
@@ -302,18 +364,17 @@
                 <i class="fa-solid fa-gauge-high"></i>
                 <span>Panel</span>
             </a>
-            if (controlador == "Admin")
-            {
-                @* Misma campanita que la de escritorio (clase .boton-notificaciones),
-                   sincronizada por push.js. Solo aparece dentro del panel. *@
-                <button type="button" class="mobile-nav-item boton-notificaciones position-relative"
-                        aria-pressed="false" title="Activar notificaciones de consultas nuevas">
-                    <i class="fa-solid fa-bell"></i>
-                    <span>Avisos</span>
-                    <span class="badge-notificaciones badge rounded-pill bg-danger position-absolute"
-                          style="display:none; top:2px; right:20%; font-size:.6rem;">0</span>
-                </button>
-            }
+            @* Acceso directo a Consultas, con contador de no leídas, en
+               cualquier vista mientras el admin esté logueado (no solo
+               dentro del panel). NO activa ni desactiva notificaciones:
+               eso se hace solo desde la campanita del menú hamburguesa,
+               arriba. *@
+            <a asp-controller="Admin" asp-action="Consultas" class="mobile-nav-item position-relative">
+                <i class="fa-solid fa-bell"></i>
+                <span>Avisos</span>
+                <span class="badge-notificaciones badge rounded-pill bg-danger position-absolute"
+                      style="display:none; top:2px; right:20%; font-size:.6rem;">0</span>
+            </a>
         }
         else
         {
@@ -323,14 +384,6 @@
             </a>
         }
     </nav>
-
-    @if (sitio.TieneWhatsApp)
-    {
-        <a href="@sitio.LinkWhatsApp" target="_blank" rel="noopener"
-           class="wa-flotante" aria-label="Escribinos por WhatsApp">
-            <i class="fa-brands fa-whatsapp"></i>
-        </a>
-    }
 
     <!-- Scripts Esenciales -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -345,25 +398,25 @@
     <script src="~/plantilla/js/main.js"></script>
 
     <script>
-        (function() {
-            var Aviso = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 4500,
-                timerProgressBar: true,
-                didOpen: function(t) {
-                    t.addEventListener('mouseenter', Swal.stopTimer);
-                    t.addEventListener('mouseleave', Swal.resumeTimer);
-                }
-            });
+            (function() {
+                var Aviso = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4500,
+                    timerProgressBar: true,
+                    didOpen: function(t) {
+                        t.addEventListener('mouseenter', Swal.stopTimer);
+                        t.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
 
-            var ok = document.getElementById('avisoExito');
-            if (ok) Aviso.fire({ icon: 'success', title: ok.dataset.mensaje });
+                var ok = document.getElementById('avisoExito');
+                if (ok) Aviso.fire({ icon: 'success', title: ok.dataset.mensaje });
 
-            var mal = document.getElementById('avisoError');
-            if (mal) Aviso.fire({ icon: 'error', title: mal.dataset.mensaje });
-        })();
+                var mal = document.getElementById('avisoError');
+                if (mal) Aviso.fire({ icon: 'error', title: mal.dataset.mensaje });
+            })();
     </script>
 
     <script src="~/js/temas.js" asp-append-version="true"></script>
@@ -371,7 +424,16 @@
     <script src="~/js/transiciones.js" asp-append-version="true"></script>
     <script src="~/js/trabajo-modal.js" asp-append-version="true"></script>
     <script src="~/js/panel-tabla.js" asp-append-version="true"></script>
+    <!-- Carrito: maneja el modal, el contador y la confirmación del pedido -->
+    <script src="~/js/carrito.js" asp-append-version="true"></script>
     <script src="~/js/push.js" asp-append-version="true"></script>
+
+    @* Cierre por inactividad. Solo con sesión iniciada: en el login no hay
+       nada que caducar. *@
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <script src="~/js/sesion-inactividad.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

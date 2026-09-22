@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +50,7 @@ public class ConsultasController : ControllerBase
             "Nueva consulta",
             $"{consulta.Nombre}: {Truncar(consulta.Mensaje, 90)}",
             "/Admin/Consultas",
+            consulta.Id,
             ct);
 
         // No se devuelve el objeto: el visitante no necesita ver el Id ni el resto.

@@ -297,6 +297,108 @@ namespace TrabajosWeb.Api.Migrations
                     b.ToTable("Medios");
                 });
 
+            modelBuilder.Entity("TrabajosWeb.Api.Entities.Pedido", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Leido")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("Nota")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedDate");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.ToTable("Pedidos");
+                });
+
+            modelBuilder.Entity("TrabajosWeb.Api.Entities.PedidoItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<Guid?>("TrabajoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoId");
+
+                    b.HasIndex("TrabajoId");
+
+                    b.ToTable("PedidoItems");
+                });
+
             modelBuilder.Entity("TrabajosWeb.Api.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -579,6 +681,24 @@ namespace TrabajosWeb.Api.Migrations
                     b.Navigation("Trabajo");
                 });
 
+            modelBuilder.Entity("TrabajosWeb.Api.Entities.PedidoItem", b =>
+                {
+                    b.HasOne("TrabajosWeb.Api.Entities.Pedido", "Pedido")
+                        .WithMany("Items")
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TrabajosWeb.Api.Entities.Trabajo", "Trabajo")
+                        .WithMany()
+                        .HasForeignKey("TrabajoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Pedido");
+
+                    b.Navigation("Trabajo");
+                });
+
             modelBuilder.Entity("TrabajosWeb.Api.Entities.RefreshToken", b =>
                 {
                     b.HasOne("TrabajosWeb.Api.Entities.Usuario", "Usuario")
@@ -623,6 +743,11 @@ namespace TrabajosWeb.Api.Migrations
             modelBuilder.Entity("TrabajosWeb.Api.Entities.Marca", b =>
                 {
                     b.Navigation("Trabajos");
+                });
+
+            modelBuilder.Entity("TrabajosWeb.Api.Entities.Pedido", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("TrabajosWeb.Api.Entities.Subcategoria", b =>
