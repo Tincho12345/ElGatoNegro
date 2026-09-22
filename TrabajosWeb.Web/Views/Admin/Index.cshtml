@@ -32,6 +32,15 @@
                         </span>
                     }
                 </a>
+                <a asp-action="Pedidos" class="btn btn-outline-primary btn-sm px-3 position-relative">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> Pedidos
+                    @if (Model.PedidosSinLeer > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @Model.PedidosSinLeer
+                        </span>
+                    }
+                </a>
                 <a asp-action="Ajustes" class="btn btn-outline-primary btn-sm px-3">
                     <i class="fa-solid fa-gear me-1"></i> Datos del sitio
                 </a>

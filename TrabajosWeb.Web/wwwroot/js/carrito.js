@@ -43,6 +43,16 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmarPedido();
         });
     }
+
+    var modalEl = document.getElementById('modalCarrito');
+    if (modalEl) {
+        modalEl.addEventListener('hide.bs.modal', function () {
+            var elementoActivo = document.activeElement;
+            if (elementoActivo && modalEl.contains(elementoActivo)) {
+                elementoActivo.blur();
+            }
+        });
+    }
 });
 
 // ---------- Inicialización global ----------
@@ -187,10 +197,17 @@ function limpiarDespuesDeEnviar() {
     renderizarCarritoModal();
 
     var modalEl = document.getElementById('modalCarrito');
-    var modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+    if (modalEl) {
+        // Quitamos el foco de cualquier elemento interno antes de que se oculte
+        var elementoActivo = document.activeElement;
+        if (elementoActivo && modalEl.contains(elementoActivo)) {
+            elementoActivo.blur();
+        }
 
-    if (modalInstance) {
-        modalInstance.hide();
+        var modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
     }
 }
 

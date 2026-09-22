@@ -13,7 +13,7 @@
     <title>@ViewData["Title"] · @sitio.NombreSitio</title>
     <meta name="description" content="@(sitio.TextoBienvenida ?? "Tienda de indumentaria. Camisas, pantalones, abrigos y calzado con las últimas tendencias.")" />
     <link rel="icon" href="~/favicon.ico" />
-    <link rel="icon" type="image/png" href="~/img/gato-negro.png" />
+    <link rel="icon" type="image/png" href="~/img/images.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -56,7 +56,7 @@
         <nav class="navbar navbar-expand-lg navbar-light p-0">
             <a asp-controller="Home" asp-action="Index" class="navbar-brand bg-primary py-4 px-5 me-0">
                 <h1 class="mb-0 d-flex align-items-center">
-                    <img src="~/img/gato-negro.png" alt="" class="logo-gato me-2" />@sitio.NombreSitio
+                    <img src="~/img/images.png" alt="" class="logo-gato me-2" />@sitio.NombreSitio
                 </h1>
             </a>
             <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -121,13 +121,6 @@
                 <div class="d-flex align-items-center">
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <form asp-controller="Cuenta" asp-action="Logout" method="post" class="m-0 me-3">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-sm btn-primary text-uppercase">Cerrar sesión</button>
-                        </form>
-                    }
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
                         @* En cualquier vista mientras el admin esté logueado,
                        no solo dentro del panel: un visitante del sitio no
                        tiene nada que suscribir. El color se lo cambia
@@ -138,6 +131,13 @@
                                 aria-pressed="false" title="Activar notificaciones de consultas nuevas">
                             <i class="fa-solid fa-bell"></i>
                         </button>
+                    }
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form asp-controller="Cuenta" asp-action="Logout" method="post" class="m-0 me-3">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-primary text-uppercase">Cerrar sesión</button>
+                        </form>
                     }
                     <!-- Botón del carrito en el navbar -->
                     <a href="#" id="abrirModalCarrito" class="btn btn-primary btn-sm-square position-relative me-3" title="Ver Carrito">
@@ -249,7 +249,7 @@
                 <div class="col-lg-6 pe-lg-5">
                     <a asp-controller="Home" asp-action="Index" class="navbar-brand">
                         <h1 class="display-5 text-primary mb-0 d-flex align-items-center">
-                            <img src="~/img/gato-negro.png" alt="" class="logo-gato logo-gato-pie me-2" />@sitio.NombreSitio
+                            <img src="~/img/images.png" alt="" class="logo-gato logo-gato-pie me-2" />@sitio.NombreSitio
                         </h1>
                     </a>
                     @if (!string.IsNullOrWhiteSpace(sitio.TextoBienvenida))
@@ -369,7 +369,11 @@
                dentro del panel). NO activa ni desactiva notificaciones:
                eso se hace solo desde la campanita del menú hamburguesa,
                arriba. *@
-            <a asp-controller="Admin" asp-action="Consultas" class="mobile-nav-item position-relative">
+            @* Va al panel (Index) y no directo a Consultas: el número del badge
+               ahora suma consultas + pedidos sin leer, así que puede haber
+               avisos ahí aunque no haya ninguna consulta nueva. Desde el
+               panel el admin ve los dos contadores por separado y elige. *@
+            <a asp-controller="Admin" asp-action="Index" class="mobile-nav-item position-relative">
                 <i class="fa-solid fa-bell"></i>
                 <span>Avisos</span>
                 <span class="badge-notificaciones badge rounded-pill bg-danger position-absolute"
@@ -420,6 +424,9 @@
     </script>
 
     <script src="~/js/temas.js" asp-append-version="true"></script>
+
+    @* Esconde la barra inferior al bajar por la página *@
+    <script src="~/js/barra-mobile.js" asp-append-version="true"></script>
     <script src="~/js/confirmaciones.js" asp-append-version="true"></script>
     <script src="~/js/transiciones.js" asp-append-version="true"></script>
     <script src="~/js/trabajo-modal.js" asp-append-version="true"></script>

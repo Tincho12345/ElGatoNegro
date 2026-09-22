@@ -2286,6 +2286,25 @@ html[data-tema="oscuro"] .visor-principal {
         align-items: center;
         z-index: 1030;
         box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+
+        /* Se esconde al bajar y vuelve al subir (barra-mobile.js).
+           Con transform y no con bottom: así el navegador anima
+           sin tener que recalcular el layout en cada cuadro. */
+        transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+        will-change: transform;
+    }
+
+        /* 110% y no 100%: así también sale de cuadro la sombra */
+        .mobile-bottom-nav--oculta {
+            transform: translateY(110%);
+        }
+
+    /* Quien pidió menos movimiento en su sistema la ve aparecer y
+       desaparecer sin deslizamiento */
+    @media (prefers-reduced-motion: reduce) {
+        .mobile-bottom-nav {
+            transition: none;
+        }
     }
 
     .mobile-nav-item {
