@@ -1,4 +1,4 @@
-﻿// Alta y edición de trabajos en un modal, sin salir del panel.
+// Alta y edición de trabajos en un modal, sin salir del panel.
 // El formulario se pide por fetch y se envía por XHR, que es lo único que
 // da progreso real de subida. Las fotos se ven en miniatura y se pueden
 // descartar con la cruz o arrastrándolas al tacho.
@@ -176,6 +176,28 @@
     // Prepara un elemento para poder arrastrarlo hasta el tacho.
     function hacerArrastrable(elemento) {
         elemento.setAttribute('draggable', 'true');
+
+        // El botón de la cruz vive adentro del elemento arrastrable: sin
+        // esto, el navegador puede interpretar un click sobre la cruz como
+        // el arranque de un arrastre (basta con que el mouse se mueva un
+        // poquito entre el click y el soltar) y el submit del formulario de
+        // borrado nunca llega a dispararse. draggable="false" en el botón
+        // le avisa al navegador que ahí no se agarra para arrastrar.
+        var botonQuitar = elemento.querySelector('.quitar');
+
+        if (botonQuitar) {
+            botonQuitar.setAttribute('draggable', 'false');
+
+            // Segunda barrera: si el navegador igual arma el arrastre desde
+            // el mousedown antes de fijarse en el draggable="false" (pasa en
+            // algunos navegadores/dispositivos), esto corta el paso del
+            // evento antes de que llegue al elemento arrastrable de más
+            // afuera, así el click del botón nunca se transforma en un
+            // dragstart.
+            botonQuitar.addEventListener('mousedown', function (e) {
+                e.stopPropagation();
+            });
+        }
 
         elemento.addEventListener('dragstart', function (e) {
             arrastrando = elemento;

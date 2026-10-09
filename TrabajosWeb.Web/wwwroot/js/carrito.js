@@ -1,7 +1,8 @@
 // Carrito de Gato Negro. Vive en localStorage: sin cuenta, sin sesión.
 // Al confirmar, el pedido se guarda en la base (con los precios recalculados
-// del lado del servidor) y avisa al panel por notificación push. No se usa
-// WhatsApp en este flujo.
+// del lado del servidor). Se puede pagar online con Mercado Pago (el carrito
+// se vacía recién cuando la página de resultado ve el pago) o dejar el pago
+// a coordinar con el salón, que se entera por notificación push.
 document.addEventListener("DOMContentLoaded", function () {
     actualizarContadorCarrito();
     inicializarEventosGlobales();
@@ -90,13 +91,27 @@ function confirmarPedido() {
     var carrito = JSON.parse(localStorage.getItem('carrito')) || [];
     if (carrito.length === 0) return;
 
+    // El sitio decide si ofrece Mercado Pago (interruptor en la API). Si la
+    // consulta falla se ofrece solo coordinar con el salón.
+    fetch('/pedidos/opciones')
+        .then(function (r) { return r.json(); })
+        .then(function (o) { return o.mercadoPago === true; })
+        .catch(function () { return false; })
+        .then(function (conMercadoPago) {
+            pedirDatosDelPedido(carrito, conMercadoPago);
+        });
+}
+
+function pedirDatosDelPedido(carrito, conMercadoPago) {
     Swal.fire({
         title: 'Últimos datos',
         html:
             '<input id="pedidoNombre" class="swal2-input" placeholder="Tu nombre" autocomplete="name">' +
             '<input id="pedidoTelefono" class="swal2-input" placeholder="Tu teléfono" autocomplete="tel">' +
             '<textarea id="pedidoNota" class="swal2-textarea" placeholder="Algo que quieras aclarar (opcional)"></textarea>',
-        confirmButtonText: 'Confirmar pedido',
+        confirmButtonText: conMercadoPago ? 'Pagar con Mercado Pago' : 'Enviar pedido',
+        showDenyButton: conMercadoPago,
+        denyButtonText: 'Coordinar con el salón',
         cancelButtonText: 'Volver',
         showCancelButton: true,
         reverseButtons: true,
@@ -106,37 +121,41 @@ function confirmarPedido() {
             var primero = document.getElementById('pedidoNombre');
             if (primero) primero.focus();
         },
-        preConfirm: function () {
-            var nombre = document.getElementById('pedidoNombre').value.trim();
-            var telefono = document.getElementById('pedidoTelefono').value.trim();
-
-            if (!nombre) {
-                Swal.showValidationMessage('Necesitamos tu nombre');
-                return false;
-            }
-
-            if (!telefono) {
-                Swal.showValidationMessage('Necesitamos un teléfono para responderte');
-                return false;
-            }
-
-            return {
-                nombre: nombre,
-                telefono: telefono,
-                nota: document.getElementById('pedidoNota').value.trim()
-            };
-        }
+        preConfirm: leerDatosDelPedido,
+        preDeny: leerDatosDelPedido
     }).then(function (r) {
-        if (!r.isConfirmed) return;
-        enviarPedido(r.value, carrito);
+        if (r.isConfirmed) enviarPedido(r.value, carrito, conMercadoPago ? 'MercadoPago' : 'Coordinar');
+        else if (r.isDenied) enviarPedido(r.value, carrito, 'Coordinar');
     });
 }
 
-function enviarPedido(datos, carrito) {
+function leerDatosDelPedido() {
+    var nombre = document.getElementById('pedidoNombre').value.trim();
+    var telefono = document.getElementById('pedidoTelefono').value.trim();
+
+    if (!nombre) {
+        Swal.showValidationMessage('Necesitamos tu nombre');
+        return false;
+    }
+
+    if (!telefono) {
+        Swal.showValidationMessage('Necesitamos un teléfono para responderte');
+        return false;
+    }
+
+    return {
+        nombre: nombre,
+        telefono: telefono,
+        nota: document.getElementById('pedidoNota').value.trim()
+    };
+}
+
+function enviarPedido(datos, carrito, metodoPago) {
     var cuerpo = {
         nombre: datos.nombre,
         telefono: datos.telefono,
         nota: datos.nota || null,
+        metodoPago: metodoPago,
         items: carrito.map(function (i) {
             return {
                 trabajoId: i.id,
@@ -146,7 +165,7 @@ function enviarPedido(datos, carrito) {
     };
 
     Swal.fire({
-        title: 'Registrando tu pedido…',
+        title: metodoPago === 'MercadoPago' ? 'Preparando tu pago…' : 'Registrando tu pedido…',
         allowOutsideClick: false,
         allowEscapeKey: false,
         didOpen: function () { Swal.showLoading(); }
@@ -169,6 +188,14 @@ function enviarPedido(datos, carrito) {
                     text: r.error || 'Probá de nuevo en un momento.',
                     allowOutsideClick: false
                 });
+                return;
+            }
+
+            // El carrito no se toca: si la clienta abandona el pago, sus
+            // productos siguen ahí. La página de resultado lo vacía cuando
+            // el pago ya quedó registrado.
+            if (r.urlPago) {
+                window.location.href = r.urlPago;
                 return;
             }
 

@@ -20,6 +20,9 @@ builder.Services.Configure<UploadSettings>(
 builder.Services.Configure<VapidSettings>(
     builder.Configuration.GetSection(VapidSettings.SectionName));
 
+builder.Services.Configure<MercadoPagoSettings>(
+    builder.Configuration.GetSection(MercadoPagoSettings.SectionName));
+
 var jwtSettings = builder.Configuration
     .GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("Falta la sección Jwt en la configuración.");
@@ -125,6 +128,13 @@ builder.Services.AddScoped<IUsuarioActualService, UsuarioActualService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+builder.Services.AddScoped<ICobroOnlineService, CobroOnlineService>();
+
+builder.Services.AddHttpClient<IMercadoPagoService, MercadoPagoService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.mercadopago.com/");
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
 
 var app = builder.Build();
 

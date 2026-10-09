@@ -146,6 +146,20 @@
                 <span asp-validation-for="Ajustes.TikTok"></span>
             </div>
 
+            <hr style="margin:28px 0;opacity:.15;" />
+
+            <h3 style="font-size:1.05rem;">Cobros</h3>
+
+            <div class="opcion">
+                <input asp-for="Ajustes.CobroOnlineMercadoPago" type="checkbox" />
+                <label asp-for="Ajustes.CobroOnlineMercadoPago">
+                    Cobrar online con Mercado Pago
+                    <span class="ayuda chico" style="display:block;font-weight:400;">
+                        Si lo desmarcás, el carrito solo permite enviar el pedido para coordinar con el salón.
+                    </span>
+                </label>
+            </div>
+
             <button type="submit" class="boton boton-primario" style="margin-top:8px;">
                 <i class="fa-solid fa-check"></i>Guardar datos
             </button>

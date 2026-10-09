@@ -96,8 +96,18 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // En PC (mouse real, no pantalla táctil) alcanza con pasar el
+        // mouse por la miniatura para que cargue la imagen grande; en
+        // celular/tablet se mantiene el toque, que ya cae en 'click'.
+        var soportaHover = window.matchMedia &&
+            window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
         minis.forEach(function (mini) {
             mini.addEventListener('click', function () { mostrar(mini); });
+
+            if (soportaHover) {
+                mini.addEventListener('mouseenter', function () { mostrar(mini); });
+            }
         });
 
         function abrirLupa() {

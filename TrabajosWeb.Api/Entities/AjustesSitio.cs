@@ -55,4 +55,9 @@ public class AjustesSitio : EntidadAuditable
 
     [StringLength(300)]
     public string? TikTok { get; set; }
+
+    // ---------- Cobros ----------
+
+    /// <summary>Ofrece pagar con Mercado Pago en el carrito. Apagado: solo se coordina con el salón.</summary>
+    public bool CobroOnlineMercadoPago { get; set; }
 }

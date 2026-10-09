@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using TrabajosWeb.Shared.DTOs;
 using TrabajosWeb.Web.Configuration;
+using TrabajosWeb.Web.Helpers;
 using TrabajosWeb.Web.Models;
 using TrabajosWeb.Web.Services;
 
@@ -521,7 +522,8 @@ public class AdminController : Controller
                 Horarios = ajustes.Horarios,
                 Facebook = ajustes.Facebook,
                 Instagram = ajustes.Instagram,
-                TikTok = ajustes.TikTok
+                TikTok = ajustes.TikTok,
+                CobroOnlineMercadoPago = ajustes.CobroOnlineMercadoPago
             }
         });
     }
@@ -584,37 +586,72 @@ public class AdminController : Controller
 
     // ---------- Pedidos ----------
 
-    public async Task<IActionResult> Pedidos(bool soloNoLeidos = false, CancellationToken ct = default)
+    private const int PedidosPorPagina = 20;
+
+    public async Task<IActionResult> Pedidos(PedidoFiltroDto filtro, CancellationToken ct = default)
     {
-        var ruta = soloNoLeidos ? "api/Pedidos?soloNoLeidos=true" : "api/Pedidos";
-        var pedidos = await _api.GetAsync<List<PedidoDto>>(ruta, ct) ?? new();
+        filtro.Tamano = PedidosPorPagina;
+
+        var resultado = await _api.GetAsync<PedidosPaginaDto>(
+            $"api/Pedidos/buscar?{filtro.ToQueryString()}", ct) ?? new();
 
         return View(new PedidosViewModel
         {
-            Pedidos = pedidos,
-            SoloNoLeidos = soloNoLeidos
+            Pedidos = resultado.Items,
+            Filtro = filtro,
+            Total = resultado.Total,
+            ImporteTotal = resultado.ImporteTotal,
+            Pagina = resultado.Pagina,
+            TotalPaginas = resultado.TotalPaginas
         });
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> MarcarLeidoPedido(Guid id, CancellationToken ct)
+    /// <summary>Descarga en Excel los pedidos que cumplen los mismos filtros de la pantalla.</summary>
+    [HttpGet]
+    public async Task<IActionResult> ExportarPedidos(PedidoFiltroDto filtro, CancellationToken ct = default)
     {
-        await _api.PatchAsync($"api/Pedidos/{id}/leido", ct);
-        return RedirectToAction(nameof(Pedidos));
+        filtro.Tamano = 0;
+
+        var resultado = await _api.GetAsync<PedidosPaginaDto>(
+            $"api/Pedidos/buscar?{filtro.ToQueryString()}", ct);
+
+        if (resultado is null)
+        {
+            TempData["Error"] = "No se pudieron leer los pedidos para exportar.";
+            return RedirectToAction(nameof(Pedidos));
+        }
+
+        return File(
+            PedidosExcel.Generar(resultado.Items),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"pedidos-{DateTime.Now:yyyy-MM-dd}.xlsx");
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EliminarPedido(Guid id, CancellationToken ct)
+    public async Task<IActionResult> MarcarLeidoPedido(Guid id, string? volver, CancellationToken ct)
+    {
+        await _api.PatchAsync($"api/Pedidos/{id}/leido", ct);
+        return VolverAPedidos(volver);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarPedido(Guid id, string? volver, CancellationToken ct)
     {
         var (ok, error) = await _api.DeleteAsync($"api/Pedidos/{id}", ct);
 
         if (!ok)
             TempData["Error"] = error ?? "No se pudo eliminar.";
 
-        return RedirectToAction(nameof(Pedidos));
+        return VolverAPedidos(volver);
     }
+
+    /// <summary>Vuelve al listado con los mismos filtros y página que tenía el usuario.</summary>
+    private IActionResult VolverAPedidos(string? volver) =>
+        !string.IsNullOrEmpty(volver) && Url.IsLocalUrl(volver)
+            ? LocalRedirect(volver)
+            : RedirectToAction(nameof(Pedidos));
 
     // ---------- Auxiliares ----------
 

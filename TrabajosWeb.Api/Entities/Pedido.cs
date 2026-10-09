@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TrabajosWeb.Shared.DTOs;
 
 namespace TrabajosWeb.Api.Entities;
 
@@ -21,6 +22,16 @@ public class Pedido : EntidadAuditable
     public decimal Total { get; set; }
 
     public bool Leido { get; set; }
+
+    public MetodoPago MetodoPago { get; set; }
+
+    public EstadoPago EstadoPago { get; set; }
+
+    /// <summary>Id del pago en Mercado Pago, para poder rastrearlo en su panel.</summary>
+    [StringLength(40)]
+    public string? MercadoPagoPaymentId { get; set; }
+
+    public DateTime? PagadoEl { get; set; }
 
     public ICollection<PedidoItem> Items { get; set; } = new List<PedidoItem>();
 }

@@ -21,6 +21,8 @@ public class AjustesSitioDto
     public string? Instagram { get; set; }
     public string? TikTok { get; set; }
 
+    public bool CobroOnlineMercadoPago { get; set; }
+
     /// <summary>Link listo para los botones de WhatsApp.</summary>
     public string LinkWhatsApp =>
         string.IsNullOrWhiteSpace(WhatsAppNumero)
@@ -78,4 +80,6 @@ public class AjustesSitioUpdateDto
     [Url(ErrorMessage = "Tiene que ser una dirección completa, con https://")]
     [StringLength(300)]
     public string? TikTok { get; set; }
+
+    public bool CobroOnlineMercadoPago { get; set; }
 }

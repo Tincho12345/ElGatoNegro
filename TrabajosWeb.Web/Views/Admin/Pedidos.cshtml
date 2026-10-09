@@ -1,7 +1,15 @@
+@using TrabajosWeb.Shared.DTOs
 @model TrabajosWeb.Web.Models.PedidosViewModel
 @{
     ViewData["Title"] = "Pedidos";
     Layout = "_LayoutSalone";
+
+    var filtro = Model.Filtro;
+    var consulta = filtro.ToQueryString(false);
+    var volver = Context.Request.Path + Context.Request.QueryString;
+
+    string UrlPagina(int pagina) =>
+        Url.Action("Pedidos") + "?" + (consulta.Length > 0 ? consulta + "&" : "") + "pagina=" + pagina;
 }
 
 <section class="contenedor seccion">
@@ -11,26 +19,76 @@
             <a asp-action="Index" class="boton boton-claro">
                 <i class="fa-solid fa-arrow-left"></i>Volver al panel
             </a>
-            @if (Model.SoloNoLeidos)
-            {
-                <a asp-action="Pedidos" class="boton boton-borde">Ver todos</a>
-            }
-            else
-            {
-                <a asp-action="Pedidos" asp-route-soloNoLeidos="true" class="boton boton-borde">
-                    Solo sin leer
-                </a>
-            }
+            <a href="@(Url.Action("ExportarPedidos") + "?" + consulta)" class="boton boton-borde">
+                <i class="fa-solid fa-file-excel"></i>Exportar a Excel
+            </a>
         </div>
     </div>
+
+    <form method="get" asp-action="Pedidos" class="vidrio filtros-pedidos">
+        <div class="filtro-campo filtro-texto">
+            <label for="texto">Buscar</label>
+            <input id="texto" name="texto" value="@filtro.Texto" class="entrada"
+                   placeholder="N° de pedido, nombre, teléfono, producto o nota" />
+        </div>
+
+        <div class="filtro-campo">
+            <label for="desde">Desde</label>
+            <input id="desde" name="desde" type="date" class="entrada"
+                   value="@(filtro.Desde?.ToString("yyyy-MM-dd"))" />
+        </div>
+
+        <div class="filtro-campo">
+            <label for="hasta">Hasta</label>
+            <input id="hasta" name="hasta" type="date" class="entrada"
+                   value="@(filtro.Hasta?.ToString("yyyy-MM-dd"))" />
+        </div>
+
+        <div class="filtro-campo">
+            <label for="leido">Lectura</label>
+            <select id="leido" name="leido" class="entrada">
+                <option value="">Todos</option>
+                <option value="false" selected="@(filtro.Leido == false)">Sin leer</option>
+                <option value="true" selected="@(filtro.Leido == true)">Leídos</option>
+            </select>
+        </div>
+
+        <div class="filtro-campo">
+            <label for="estadoPago">Pago</label>
+            <select id="estadoPago" name="estadoPago" class="entrada">
+                <option value="">Todos</option>
+                <option value="Aprobado" selected="@(filtro.EstadoPago == EstadoPago.Aprobado)">Pagados con Mercado Pago</option>
+                <option value="Pendiente" selected="@(filtro.EstadoPago == EstadoPago.Pendiente)">Pago pendiente</option>
+                <option value="Rechazado" selected="@(filtro.EstadoPago == EstadoPago.Rechazado)">Pago rechazado</option>
+                <option value="Reembolsado" selected="@(filtro.EstadoPago == EstadoPago.Reembolsado)">Reembolsados</option>
+                <option value="SinPago" selected="@(filtro.EstadoPago == EstadoPago.SinPago)">Pago a coordinar</option>
+            </select>
+        </div>
+
+        <div class="filtro-acciones">
+            <button type="submit" class="boton boton-primario">
+                <i class="fa-solid fa-magnifying-glass"></i>Filtrar
+            </button>
+            <a asp-action="Pedidos" class="boton boton-claro">Limpiar</a>
+        </div>
+    </form>
+
+    <p class="ayuda chico" style="margin-bottom:16px;">
+        @Model.Total @(Model.Total == 1 ? "pedido" : "pedidos")
+        · Total @Model.ImporteTotal.ToString("C0")
+        @if (filtro.TieneFiltros)
+        {
+            <text>· con los filtros aplicados. El Excel exporta estos mismos pedidos.</text>
+        }
+    </p>
 
     @if (!Model.Pedidos.Any())
     {
         <div class="vidrio vacio">
             <i class="fa-solid fa-cart-shopping"></i>
             <p>
-                @(Model.SoloNoLeidos
-                    ? "No quedan pedidos sin leer."
+                @(filtro.TieneFiltros
+                    ? "No hay pedidos con esos filtros."
                     : "Todavía no llegaron pedidos desde el carrito.")
             </p>
         </div>
@@ -55,6 +113,31 @@
 
                 <div class="consulta-datos">
                     <span>@pedido.Telefono</span>
+
+                    @switch (pedido.EstadoPago)
+                    {
+                        case EstadoPago.Aprobado:
+                            <span class="badge bg-success ms-2">
+                                <i class="fa-solid fa-circle-check"></i> Pagado con Mercado Pago
+                                @if (pedido.PagadoEl.HasValue)
+                                {
+                                    <text> · @pedido.PagadoEl.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</text>
+                                }
+                            </span>
+                            break;
+                        case EstadoPago.Pendiente:
+                            <span class="badge bg-warning text-dark ms-2">Mercado Pago: pago pendiente</span>
+                            break;
+                        case EstadoPago.Rechazado:
+                            <span class="badge bg-danger ms-2">Mercado Pago: pago rechazado</span>
+                            break;
+                        case EstadoPago.Reembolsado:
+                            <span class="badge bg-secondary ms-2">Mercado Pago: reembolsado</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary ms-2">Pago a coordinar</span>
+                            break;
+                    }
                 </div>
 
                 <div class="pedido-items">
@@ -106,6 +189,7 @@
                         <form asp-action="MarcarLeidoPedido" method="post" class="en-linea">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@pedido.Id" />
+                            <input type="hidden" name="volver" value="@volver" />
                             <button type="submit" class="boton boton-borde boton-chico">
                                 <i class="fa-solid fa-check"></i>Marcar leído
                             </button>
@@ -116,6 +200,7 @@
                           data-confirmar="¿Eliminar este pedido?">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@pedido.Id" />
+                        <input type="hidden" name="volver" value="@volver" />
                         <button type="submit" class="boton boton-peligro boton-chico">
                             <i class="fa-regular fa-trash-can"></i>Eliminar
                         </button>
@@ -123,11 +208,69 @@
                 </div>
             </article>
         }
+
+        @if (Model.TotalPaginas > 1)
+        {
+            <nav class="paginador-pedidos">
+                @if (Model.Pagina > 1)
+                {
+                    <a href="@UrlPagina(Model.Pagina - 1)" class="boton boton-borde boton-chico">
+                        <i class="fa-solid fa-chevron-left"></i>Anterior
+                    </a>
+                }
+
+                <span class="ayuda chico">Página @Model.Pagina de @Model.TotalPaginas</span>
+
+                @if (Model.Pagina < Model.TotalPaginas)
+                {
+                    <a href="@UrlPagina(Model.Pagina + 1)" class="boton boton-borde boton-chico">
+                        Siguiente<i class="fa-solid fa-chevron-right" style="margin-left:8px;"></i>
+                    </a>
+                }
+            </nav>
+        }
     }
 </section>
 
 @section Estilos {
     <style>
+        .filtros-pedidos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            align-items: end;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+            .filtros-pedidos label {
+                display: block;
+                margin-bottom: 4px;
+                font-size: 0.85rem;
+            }
+
+            .filtros-pedidos .entrada {
+                width: 100%;
+            }
+
+        .filtro-texto {
+            grid-column: span 2;
+        }
+
+        .filtro-acciones {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .paginador-pedidos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
         .tabla-pedido {
             width: 100%;
             margin: 12px 0;

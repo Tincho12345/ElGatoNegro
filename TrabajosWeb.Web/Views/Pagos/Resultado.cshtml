@@ -1,0 +1,84 @@
+@using TrabajosWeb.Shared.DTOs
+@model EstadoPedidoDto?
+@{
+    Layout = "_LayoutSalone";
+
+    var estado = Model?.EstadoPago;
+    var hayPedido = Model is not null;
+    var numero = Model?.Numero;
+    var huboIntento = ViewBag.HuboIntentoDePago == true;
+
+    var aprobado = estado == EstadoPago.Aprobado;
+    var rechazado = estado == EstadoPago.Rechazado;
+    var reembolsado = estado == EstadoPago.Reembolsado;
+
+    var (icono, color, titulo) = aprobado
+        ? ("fa-circle-check", "text-success", "¡Pago aprobado!")
+        : rechazado
+            ? ("fa-circle-xmark", "text-danger", "No se pudo procesar el pago")
+            : reembolsado
+                ? ("fa-rotate-left", "text-secondary", "Pago reembolsado")
+                : ("fa-hourglass-half", "text-warning", "Estamos esperando tu pago");
+
+    ViewData["Title"] = titulo;
+
+    // El carrito se vacía recién cuando el pedido ya no tiene vuelta atrás:
+    // si la clienta abandona o el pago falla, sus productos siguen ahí.
+    var vaciarCarrito = aprobado || (estado == EstadoPago.Pendiente && huboIntento);
+}
+
+<div class="container-fluid bg-light page-header py-5 mb-5">
+    <div class="container text-center py-5">
+        <h1 class="display-2 animated slideInLeft">@titulo</h1>
+    </div>
+</div>
+
+<div class="container pb-5 text-center">
+    <i class="fa-solid @icono @color fa-4x mb-4"></i>
+
+    @if (!hayPedido)
+    {
+        <p class="fs-5 mb-4">No encontramos el pedido. Si ya pagaste, escribinos y lo revisamos.</p>
+    }
+    else if (aprobado)
+    {
+        <p class="fs-4 mb-2">Pedido N° @numero</p>
+        <p class="fs-5 mb-4">Ya avisamos al salón. Te van a contactar para coordinar la entrega.</p>
+    }
+    else if (rechazado)
+    {
+        <p class="fs-4 mb-2">Pedido N° @numero</p>
+        <p class="fs-5 mb-4">
+            Mercado Pago no aprobó el pago. Tus productos siguen en el carrito:
+            podés volver a intentarlo con otro medio de pago.
+        </p>
+    }
+    else if (reembolsado)
+    {
+        <p class="fs-4 mb-2">Pedido N° @numero</p>
+        <p class="fs-5 mb-4">El pago de este pedido fue reembolsado.</p>
+    }
+    else
+    {
+        <p class="fs-4 mb-2">Pedido N° @numero</p>
+        <p class="fs-5 mb-4">
+            @(huboIntento
+                ? "Tu pago está pendiente de acreditación. Apenas Mercado Pago lo confirme, el salón recibe el aviso."
+                : "Todavía no vemos un pago registrado para este pedido. Tus productos siguen en el carrito.")
+        </p>
+    }
+
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+        <i class="fa-solid fa-store me-2"></i>Seguir viendo productos
+    </a>
+</div>
+
+@section Scripts {
+    @if (vaciarCarrito)
+    {
+        <script>
+            localStorage.removeItem('carrito');
+            if (typeof actualizarContadorCarrito === 'function') actualizarContadorCarrito();
+        </script>
+    }
+}

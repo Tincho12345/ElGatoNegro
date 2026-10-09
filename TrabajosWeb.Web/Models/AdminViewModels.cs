@@ -66,5 +66,9 @@ public class ConsultasViewModel
 public class PedidosViewModel
 {
     public List<PedidoDto> Pedidos { get; set; } = new();
-    public bool SoloNoLeidos { get; set; }
+    public PedidoFiltroDto Filtro { get; set; } = new();
+    public int Total { get; set; }
+    public decimal ImporteTotal { get; set; }
+    public int Pagina { get; set; } = 1;
+    public int TotalPaginas { get; set; } = 1;
 }

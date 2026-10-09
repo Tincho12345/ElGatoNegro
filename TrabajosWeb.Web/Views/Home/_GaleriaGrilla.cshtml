@@ -1,4 +1,4 @@
-﻿@using TrabajosWeb.Shared.DTOs
+@using TrabajosWeb.Shared.DTOs
 @model TrabajosWeb.Web.Models.GaleriaViewModel
 @{
     // Todas las piezas van al HTML de una vez. El filtro lo hace Isotope
@@ -83,18 +83,19 @@
                             <button type="button" class="filtro-cabecera" aria-expanded="true">
                                 Tipo <i class="fa-solid fa-chevron-up"></i>
                             </button>
+                            @* Checkboxes: se puede tildar más de un Tipo a la vez.
+                               El número de al lado no es el fijo de la carga de la
+                               página: galeria.js lo recalcula según los demás
+                               filtros que haya puestos (Marca, precio, etc.). *@
                             <div class="filtro-lista" data-grupo="subcat">
-                                <button type="button" class="filtro-opcion activo" data-valor="">
-                                    Todos
-                                </button>
                                 @for (var i = 0; i < subcategorias.Count; i++)
                                 {
                                     var sub = subcategorias[i];
-                                    <button type="button"
-                                            class="filtro-opcion @(i >= tope ? "extra" : null)"
-                                            data-valor="@sub.Slug">
-                                        @sub.Nombre <span class="filtro-cantidad">@sub.Cantidad</span>
-                                    </button>
+                                    <label class="filtro-opcion @(i >= tope ? "extra" : null)">
+                                        <input type="checkbox" class="filtro-check" data-valor="@sub.Slug" />
+                                        <span class="filtro-texto">@sub.Nombre</span>
+                                        <span class="filtro-cantidad" data-cantidad-para="@sub.Slug">@sub.Cantidad</span>
+                                    </label>
                                 }
                             </div>
                             @if (subcategorias.Count > tope)
@@ -113,17 +114,14 @@
                                 Marca <i class="fa-solid fa-chevron-up"></i>
                             </button>
                             <div class="filtro-lista" data-grupo="marca">
-                                <button type="button" class="filtro-opcion activo" data-valor="">
-                                    Todas
-                                </button>
                                 @for (var i = 0; i < marcas.Count; i++)
                                 {
                                     var marca = marcas[i];
-                                    <button type="button"
-                                            class="filtro-opcion @(i >= tope ? "extra" : null)"
-                                            data-valor="@marca.Slug">
-                                        @marca.Nombre <span class="filtro-cantidad">@marca.Cantidad</span>
-                                    </button>
+                                    <label class="filtro-opcion @(i >= tope ? "extra" : null)">
+                                        <input type="checkbox" class="filtro-check" data-valor="@marca.Slug" />
+                                        <span class="filtro-texto">@marca.Nombre</span>
+                                        <span class="filtro-cantidad" data-cantidad-para="@marca.Slug">@marca.Cantidad</span>
+                                    </label>
                                 }
                             </div>
                             @if (marcas.Count > tope)
@@ -503,13 +501,34 @@
             background-color: rgba(0, 0, 0, .05);
         }
 
-        .filtro-opcion.activo {
+        /* El resaltado sigue al estado real del checkbox (~ hermano
+           siguiente), no a una clase que haya que ir prendiendo y
+           apagando a mano por JS. */
+        .filtro-opcion input:checked ~ .filtro-texto,
+        .filtro-opcion input:checked ~ .filtro-cantidad {
             color: var(--bs-primary);
             font-weight: 700;
         }
 
+        .filtro-opcion input[type="checkbox"] {
+            flex-shrink: 0;
+            margin: 0;
+            accent-color: var(--bs-primary);
+        }
+
+        .filtro-opcion .filtro-texto {
+            flex: 1 1 auto;
+        }
+
         .filtro-opcion.extra {
             display: none;
+        }
+
+        /* Cuando con los demás filtros puestos esa opción ya no suma
+           nada, se ve apagada — sigue siendo clickeable por si la
+           persona quiere desmarcar otra cosa primero. */
+        .filtro-opcion.sin-resultados {
+            opacity: .45;
         }
 
     .filtro-lista.expandida .filtro-opcion.extra {

@@ -21,10 +21,12 @@
 
     // Estado de todos los filtros a la vez. Isotope decide con esto,
     // así se pueden combinar categoría + marca + precio sin pelearse.
+    // subcat y marca son arrays: ahora se puede tildar más de un Tipo
+    // y más de una Marca al mismo tiempo (antes era uno solo, como radio).
     var estado = {
         categoria: '',
-        subcat: '',
-        marca: '',
+        subcat: [],
+        marca: [],
         texto: [],
         precioMin: null,
         precioMax: null,
@@ -46,8 +48,8 @@
         if (!item || !item.classList) return true;
 
         if (estado.categoria && !item.classList.contains(estado.categoria)) return false;
-        if (estado.subcat && item.dataset.subcat !== estado.subcat) return false;
-        if (estado.marca && item.dataset.marca !== estado.marca) return false;
+        if (estado.subcat.length && estado.subcat.indexOf(item.dataset.subcat) === -1) return false;
+        if (estado.marca.length && estado.marca.indexOf(item.dataset.marca) === -1) return false;
         if (estado.soloOferta && item.dataset.oferta !== '1') return false;
 
         // Todas las palabras tienen que estar; el orden no importa.
@@ -63,6 +65,42 @@
             var precio = parseFloat(item.dataset.precio);
 
             // Sin precio cargado no pertenece a ningún rango.
+            if (isNaN(precio)) return false;
+            if (estado.precioMin !== null && precio < estado.precioMin) return false;
+            if (estado.precioMax !== null && precio > estado.precioMax) return false;
+        }
+
+        return true;
+    }
+
+    // ---------- Contadores por opción (Tipo/Marca en vivo) ----------
+    // Mismas reglas que "coincide", pero salteando el filtro del propio
+    // grupo: sirve para responder "si además tildara esta opción, ¿cuántas
+    // piezas quedarían?" sin que las opciones ya tildadas de ESE MISMO
+    // grupo se tapen entre sí (así "Marca 2" sigue mostrando 2 aunque ya
+    // haya otra marca tildada al lado).
+    function coincideParaContar(item, grupoAIgnorar) {
+        if (estado.categoria && !item.classList.contains(estado.categoria)) return false;
+
+        if (grupoAIgnorar !== 'subcat' && estado.subcat.length
+            && estado.subcat.indexOf(item.dataset.subcat) === -1) return false;
+
+        if (grupoAIgnorar !== 'marca' && estado.marca.length
+            && estado.marca.indexOf(item.dataset.marca) === -1) return false;
+
+        if (estado.soloOferta && item.dataset.oferta !== '1') return false;
+
+        if (estado.texto.length) {
+            var donde = item.dataset.buscar || '';
+
+            for (var i = 0; i < estado.texto.length; i++) {
+                if (donde.indexOf(estado.texto[i]) === -1) return false;
+            }
+        }
+
+        if (estado.precioMin !== null || estado.precioMax !== null) {
+            var precio = parseFloat(item.dataset.precio);
+
             if (isNaN(precio)) return false;
             if (estado.precioMin !== null && precio < estado.precioMin) return false;
             if (estado.precioMax !== null && precio > estado.precioMax) return false;
@@ -87,9 +125,9 @@
     // Cuántos filtros de producto hay puestos. Se muestra en el botón
     // de pantallas chicas, donde el panel está cerrado.
     function contarFiltros() {
-        var n = 0;
-        if (estado.subcat) n++;
-        if (estado.marca) n++;
+        // Suma cada Tipo y cada Marca tildados por separado: con dos
+        // Marcas puestas, el globo del botón "Filtros" dice 2, no 1.
+        var n = estado.subcat.length + estado.marca.length;
         if (estado.precioMin !== null || estado.precioMax !== null) n++;
         if (estado.soloOferta) n++;
         return n;
@@ -143,18 +181,48 @@
         });
     }
 
+    // Todas las piezas, una sola vez: los contadores por opción se
+    // recalculan contra esta lista, no contra lo que Isotope está
+    // mostrando en pantalla en ese momento.
+    var itemsTodos = Array.prototype.slice.call(contenedor.querySelectorAll('.isotope-item'));
+
+    function actualizarContadores() {
+        if (!panelProducto) return;
+
+        ['subcat', 'marca'].forEach(function (clave) {
+            var grupo = panelProducto.querySelector('.filtro-lista[data-grupo="' + clave + '"]');
+            if (!grupo) return;
+
+            grupo.querySelectorAll('.filtro-check').forEach(function (casilla) {
+                var valor = casilla.dataset.valor;
+
+                var cantidad = itemsTodos.reduce(function (total, item) {
+                    if (item.dataset[clave] !== valor) return total;
+                    return coincideParaContar(item, clave) ? total + 1 : total;
+                }, 0);
+
+                var opcion = casilla.closest('.filtro-opcion');
+                var globo = opcion ? opcion.querySelector('.filtro-cantidad') : null;
+
+                if (globo) globo.textContent = cantidad;
+                if (opcion) opcion.classList.toggle('sin-resultados', cantidad === 0);
+            });
+        });
+    }
+
     function refrescar() {
         if (!grilla) return;
 
         grilla.arrange({ filter: coincide });
         revisarCuenta();
         revisarResultados();
+        actualizarContadores();
         setTimeout(revisarVacio, 420);
     }
 
     function limpiarFiltrosProducto() {
-        estado.subcat = '';
-        estado.marca = '';
+        estado.subcat = [];
+        estado.marca = [];
         estado.texto = [];
         estado.precioMin = null;
         estado.precioMax = null;
@@ -166,10 +234,8 @@
 
         if (!panelProducto) return;
 
-        panelProducto.querySelectorAll('.filtro-lista[data-grupo]').forEach(function (grupo) {
-            grupo.querySelectorAll('.filtro-opcion').forEach(function (opcion) {
-                opcion.classList.toggle('activo', opcion.dataset.valor === '');
-            });
+        panelProducto.querySelectorAll('.filtro-check').forEach(function (casilla) {
+            casilla.checked = false;
         });
 
         var min = panelProducto.querySelector('#precioMin');
@@ -224,6 +290,7 @@
     contenedor.classList.add('lista');
     revisarPanel();
     revisarVacio();
+    actualizarContadores();
 
     // Cada foto que termina de bajar puede cambiar la altura real de su
     // tarjeta: pedimos un reacomodo, agrupando los pedidos seguidos.
@@ -370,18 +437,24 @@
     // ---------- Panel lateral de productos ----------
 
     if (panelProducto) {
-        // Elegir una opción dentro de un grupo
+        // Tildar/destildar una opción dentro de un grupo (Tipo o Marca).
+        // Cada checkbox se agrega o saca de estado[clave] por su cuenta:
+        // no se apagan entre sí, así se puede combinar más de una opción
+        // del mismo grupo (antes era una sola, como un radio).
         panelProducto.querySelectorAll('.filtro-lista[data-grupo]').forEach(function (grupo) {
             var clave = grupo.dataset.grupo; // "subcat" o "marca"
 
-            grupo.querySelectorAll('.filtro-opcion').forEach(function (opcion) {
-                opcion.addEventListener('click', function () {
-                    grupo.querySelectorAll('.filtro-opcion').forEach(function (otra) {
-                        otra.classList.remove('activo');
-                    });
+            grupo.querySelectorAll('.filtro-check').forEach(function (casilla) {
+                casilla.addEventListener('change', function () {
+                    var valor = casilla.dataset.valor;
+                    var indice = estado[clave].indexOf(valor);
 
-                    opcion.classList.add('activo');
-                    estado[clave] = opcion.dataset.valor;
+                    if (casilla.checked && indice === -1) {
+                        estado[clave].push(valor);
+                    } else if (!casilla.checked && indice !== -1) {
+                        estado[clave].splice(indice, 1);
+                    }
+
                     refrescar();
                 });
             });
@@ -450,10 +523,15 @@
             });
         }
 
+        // "Limpiar filtros" ahora limpia TODO: Tipo, Marca, precio, oferta,
+        // búsqueda y también la categoría de arriba (vuelve a "Todo").
+        // Antes solo tocaba lo de este panel y la persona podía terminar
+        // en "0 resultados" sin darse cuenta de que seguía filtrada por
+        // categoría.
         panelProducto.querySelectorAll('#limpiarFiltros, #limpiarFiltrosMovil').forEach(function (boton) {
             boton.addEventListener('click', function () {
                 limpiarFiltrosProducto();
-                refrescar();
+                aplicar('*', '', true);
             });
         });
     }

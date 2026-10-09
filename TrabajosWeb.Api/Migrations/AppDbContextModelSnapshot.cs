@@ -28,6 +28,9 @@ namespace TrabajosWeb.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("CobroOnlineMercadoPago")
+                        .HasColumnType("bit");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
@@ -310,8 +313,18 @@ namespace TrabajosWeb.Api.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("EstadoPago")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Leido")
                         .HasColumnType("bit");
+
+                    b.Property<string>("MercadoPagoPaymentId")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("MetodoPago")
+                        .HasColumnType("int");
 
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(80)
@@ -331,6 +344,9 @@ namespace TrabajosWeb.Api.Migrations
 
                     b.Property<int>("Numero")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("PagadoEl")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Telefono")
                         .IsRequired()

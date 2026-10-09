@@ -14,15 +14,18 @@ public class PedidosController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IPushNotificationService _push;
+    private readonly ICobroOnlineService _cobroOnline;
     private readonly ILogger<PedidosController> _logger;
 
     public PedidosController(
         AppDbContext context,
         IPushNotificationService push,
+        ICobroOnlineService cobroOnline,
         ILogger<PedidosController> logger)
     {
         _context = context;
         _push = push;
+        _cobroOnline = cobroOnline;
         _logger = logger;
     }
 
@@ -37,6 +40,9 @@ public class PedidosController : ControllerBase
     {
         if (dto.Items is null || dto.Items.Count == 0)
             return BadRequest(new { mensaje = "El carrito está vacío." });
+
+        if (dto.MetodoPago == MetodoPago.MercadoPago && !await _cobroOnline.MercadoPagoHabilitadoAsync(ct))
+            return BadRequest(new { mensaje = "Por ahora el pago online no está disponible. Podés coordinar el pago con el salón." });
 
         var idsPedidos = dto.Items.Select(i => i.TrabajoId).Distinct().ToList();
 
@@ -69,6 +75,8 @@ public class PedidosController : ControllerBase
 
         var siguienteNumero = (await _context.Pedidos.MaxAsync(p => (int?)p.Numero, ct) ?? 0) + 1;
 
+        var pagaOnline = dto.MetodoPago == MetodoPago.MercadoPago;
+
         var pedido = new Pedido
         {
             Numero = siguienteNumero,
@@ -76,6 +84,11 @@ public class PedidosController : ControllerBase
             Telefono = dto.Telefono,
             Nota = dto.Nota,
             Total = items.Sum(i => i.Subtotal),
+            MetodoPago = dto.MetodoPago,
+            EstadoPago = pagaOnline ? EstadoPago.Pendiente : EstadoPago.SinPago,
+            // El pago online se avisa recién cuando Mercado Pago lo aprueba
+            // (ver PagosController): hasta entonces no es una novedad del panel.
+            Leido = pagaOnline,
             Items = items
         };
 
@@ -88,11 +101,14 @@ public class PedidosController : ControllerBase
         // servicio: si falla el envío, el pedido ya quedó guardado igual.
         // consultaId queda en null a propósito: ese parámetro es específico
         // de las consultas del formulario de contacto, no de los pedidos.
-        await _push.NotificarATodosAsync(
-            "Nuevo pedido",
-            $"{pedido.Nombre}: pedido N° {pedido.Numero} — {pedido.Total.ToString("C0")}",
-            "/Admin/Pedidos",
-            ct: ct);
+        if (!pagaOnline)
+        {
+            await _push.NotificarATodosAsync(
+                "Nuevo pedido",
+                $"{pedido.Nombre}: pedido N° {pedido.Numero} — {pedido.Total.ToString("C0")}",
+                "/Admin/Pedidos",
+                ct: ct);
+        }
 
         return Ok(MapearDto(pedido));
     }
@@ -113,6 +129,88 @@ public class PedidosController : ControllerBase
             .ToListAsync(ct);
 
         return Ok(lista.Select(MapearDto).ToList());
+    }
+
+    /// <summary>
+    /// Listado del panel con filtros y paginado. También lo usa la exportación
+    /// a Excel, pidiendo Tamano = 0 para traer todo lo que cumple los filtros.
+    /// </summary>
+    [HttpGet("buscar")]
+    [Authorize(Policy = "SoloAdmin")]
+    public async Task<ActionResult<PedidosPaginaDto>> Buscar(
+        [FromQuery] PedidoFiltroDto filtro,
+        CancellationToken ct)
+    {
+        var query = _context.Pedidos.AsNoTracking().AsQueryable();
+
+        var texto = filtro.Texto?.Trim();
+        if (!string.IsNullOrEmpty(texto))
+        {
+            var esNumero = int.TryParse(texto, out var numero);
+
+            query = query.Where(p =>
+                p.Nombre.Contains(texto)
+                || p.Telefono.Contains(texto)
+                || (p.Nota != null && p.Nota.Contains(texto))
+                || p.Items.Any(i => i.Titulo.Contains(texto))
+                || (esNumero && p.Numero == numero));
+        }
+
+        // Las fechas del filtro son días del calendario local: el día "hasta" entra completo.
+        if (filtro.Desde.HasValue)
+        {
+            var desde = filtro.Desde.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).ToUniversalTime();
+            query = query.Where(p => p.CreatedDate >= desde);
+        }
+
+        if (filtro.Hasta.HasValue)
+        {
+            var hasta = filtro.Hasta.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).ToUniversalTime();
+            query = query.Where(p => p.CreatedDate < hasta);
+        }
+
+        if (filtro.Leido.HasValue)
+            query = query.Where(p => p.Leido == filtro.Leido.Value);
+
+        if (filtro.EstadoPago.HasValue)
+            query = query.Where(p => p.EstadoPago == filtro.EstadoPago.Value);
+
+        var total = await query.CountAsync(ct);
+        var importeTotal = await query.SumAsync(p => (decimal?)p.Total, ct) ?? 0m;
+
+        var ordenada = query
+            .Include(p => p.Items)
+            .OrderByDescending(p => p.CreatedDate);
+
+        var pagina = Math.Max(filtro.Pagina, 1);
+        var tamano = Math.Clamp(filtro.Tamano, 0, 100);
+        var totalPaginas = 1;
+
+        List<Pedido> pedidos;
+
+        if (tamano == 0)
+        {
+            pedidos = await ordenada.ToListAsync(ct);
+        }
+        else
+        {
+            totalPaginas = Math.Max((int)Math.Ceiling(total / (double)tamano), 1);
+            pagina = Math.Min(pagina, totalPaginas);
+
+            pedidos = await ordenada
+                .Skip((pagina - 1) * tamano)
+                .Take(tamano)
+                .ToListAsync(ct);
+        }
+
+        return Ok(new PedidosPaginaDto
+        {
+            Items = pedidos.Select(MapearDto).ToList(),
+            Total = total,
+            ImporteTotal = importeTotal,
+            Pagina = pagina,
+            TotalPaginas = totalPaginas
+        });
     }
 
     [HttpPatch("{id:guid}/leido")]
@@ -152,6 +250,9 @@ public class PedidosController : ControllerBase
         Nota = pedido.Nota,
         Total = pedido.Total,
         Leido = pedido.Leido,
+        MetodoPago = pedido.MetodoPago,
+        EstadoPago = pedido.EstadoPago,
+        PagadoEl = pedido.PagadoEl,
         CreatedDate = pedido.CreatedDate,
         Items = pedido.Items.Select(i => new PedidoItemDto
         {
